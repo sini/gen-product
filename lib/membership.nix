@@ -55,7 +55,8 @@ let
       true
     else
       let
-        c1 = restriction.cells == null || elem (fullCellId def coords) (map (fullCellId def) restriction.cells);
+        c1 =
+          restriction.cells == null || elem (fullCellId def coords) (map (fullCellId def) restriction.cells);
         c2 = all (r: relationMatch def r coords) restriction.relations;
         c3 = restriction.predicate coords;
       in
@@ -64,18 +65,16 @@ let
   # Conjoin two normalized restrictions (restrict∘restrict — the induced-subgraph intersection). The
   # combined record stays cells/relations-shaped so enumeration keeps its hints; both cells clauses
   # are additionally re-checked in the predicate so no member escapes either constraint.
-  conjoin =
-    def: r: m:
-    {
-      cells = if m.cells != null then m.cells else r.cells;
-      relations = r.relations ++ m.relations;
-      predicate =
-        c:
-        r.predicate c
-        && m.predicate c
-        && (r.cells == null || elem (fullCellId def c) (map (fullCellId def) r.cells))
-        && (m.cells == null || elem (fullCellId def c) (map (fullCellId def) m.cells));
-    };
+  conjoin = def: r: m: {
+    cells = if m.cells != null then m.cells else r.cells;
+    relations = r.relations ++ m.relations;
+    predicate =
+      c:
+      r.predicate c
+      && m.predicate c
+      && (r.cells == null || elem (fullCellId def c) (map (fullCellId def) r.cells))
+      && (m.cells == null || elem (fullCellId def c) (map (fullCellId def) m.cells));
+  };
 
   # Full row-major lattice enumeration: declared factor order, last dimension varying fastest, each
   # factor's own `nodes` order preserved (law P14). Forces every factor node list (en-masse, law P10).
@@ -91,8 +90,7 @@ let
     ) [ { } ] def.dims;
 
   firstSeenBy =
-    keyFn: xs:
-    foldl' (acc: x: if elem (keyFn x) (map keyFn acc) then acc else acc ++ [ x ]) [ ] xs;
+    keyFn: xs: foldl' (acc: x: if elem (keyFn x) (map keyFn acc) then acc else acc ++ [ x ]) [ ] xs;
 
   relationsCoverAll =
     def: restriction:
@@ -117,7 +115,7 @@ let
             map (
               pair:
               let
-                shared = filter (d: partial ? d) r.dims;
+                shared = filter (d: builtins.hasAttr d partial) r.dims;
                 ok = all (
                   d: (def.factorsByDim.${d}).key partial.${d} == (def.factorsByDim.${d}).key pair.${d}
                 ) shared;

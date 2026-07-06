@@ -88,7 +88,7 @@ let
     let
       allDims = def.dims;
       baseDims = attrNames base;
-      freeDims = filter (d: !(base ? d)) allDims;
+      freeDims = filter (d: !(builtins.hasAttr d base)) allDims;
       freeFactors = listToAttrs (
         map (d: {
           name = d;
@@ -125,12 +125,14 @@ let
             }) freeDims
           );
         in
-        map (d: if base ? d then baseKeyAt d else byDim.${d}) allDims;
+        map (d: if builtins.hasAttr d base then baseKeyAt d else byDim.${d}) allDims;
 
-      dimPos = listToAttrs (imap0 (i: d: {
-        name = d;
-        value = i;
-      }) allDims);
+      dimPos = listToAttrs (
+        imap0 (i: d: {
+          name = d;
+          value = i;
+        }) allDims
+      );
 
       fullCoordsOfKeys =
         fullKeys:
@@ -187,13 +189,13 @@ let
         let
           ks = attrNames coords;
           unknown = filter (d: !(elem d freeDims)) ks;
-          missing = filter (d: !(coords ? d)) freeDims;
+          missing = filter (d: !(builtins.hasAttr d coords)) freeDims;
           badNode = filter (d: notANode def.factorsByDim.${d} coords.${d}) freeDims;
         in
         if unknown != [ ] then
           let
             d = head unknown;
-            fixedNote = if base ? d then " (dimension '${d}' is fixed in this slice)" else "";
+            fixedNote = if builtins.hasAttr d base then " (dimension '${d}' is fixed in this slice)" else "";
           in
           throw "gen-product: unknown-dim '${d}'${fixedNote} — ${declaredMsg}"
         else if missing != [ ] then
@@ -253,7 +255,8 @@ let
     if unknown != [ ] then
       let
         d = head unknown;
-        fixedNote = if pg.__base ? d then " (dimension '${d}' is fixed in this slice)" else "";
+        fixedNote =
+          if builtins.hasAttr d pg.__base then " (dimension '${d}' is fixed in this slice)" else "";
       in
       throw "gen-product: unknown-dim '${d}'${fixedNote} — declared (free) dims: ${concatStringsSep ", " freeDims}"
     else

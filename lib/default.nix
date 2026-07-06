@@ -20,7 +20,13 @@ let
 
   inherit (view) mkView sliceView;
   inherit (membership) normalizeMembership conjoin;
-  inherit (prelude) elem filter attrNames head concatStringsSep;
+  inherit (prelude)
+    elem
+    filter
+    attrNames
+    head
+    concatStringsSep
+    ;
 
   # ── addressing (public wrappers; take/return entries, cellIds are opaque internal keys) ──
   cell = pg: coords: pg.__cell coords;
@@ -28,7 +34,9 @@ let
   cells = pg: pg.__cells;
 
   slice = sliceView;
-  fiber = pg: dim: entry: sliceView pg { ${dim} = entry; };
+  fiber =
+    pg: dim: entry:
+    sliceView pg { ${dim} = entry; };
 
   projectTo =
     pg: dim:

@@ -62,17 +62,18 @@ let
         x = head a;
         y = head b;
       in
-      if x < y then true else if x > y then false else lexLt (tail a) (tail b);
+      if x < y then
+        true
+      else if x > y then
+        false
+      else
+        lexLt (tail a) (tail b);
 
   sortDesc = xs: sort (a: b: a > b) xs;
 
-  indexOf =
-    xs: v:
-    head (filter (i: elemAt xs i == v) (imap0 (i: _: i) xs));
+  indexOf = xs: v: head (filter (i: elemAt xs i == v) (imap0 (i: _: i) xs));
 
-  properSubset =
-    a: b:
-    a != b && builtins.all (x: elem x b) a;
+  properSubset = a: b: a != b && builtins.all (x: elem x b) a;
 
   linearizeByDimOrder = dims: {
     _type = "gen-product/linearization";
@@ -106,7 +107,7 @@ let
   validateByRank =
     D: ranks:
     let
-      uncovered = filter (d: !(ranks ? d)) D;
+      uncovered = filter (d: !(builtins.hasAttr d ranks)) D;
       rankOf = d: ranks.${d};
       collide = firstRankCollision D rankOf;
     in
@@ -120,7 +121,14 @@ let
   firstDuplicate =
     xs:
     let
-      go = seen: rest: if rest == [ ] then null else if elem (head rest) seen then head rest else go (seen ++ [ (head rest) ]) (tail rest);
+      go =
+        seen: rest:
+        if rest == [ ] then
+          null
+        else if elem (head rest) seen then
+          head rest
+        else
+          go (seen ++ [ (head rest) ]) (tail rest);
     in
     go [ ] xs;
 
@@ -171,13 +179,9 @@ let
         if isFunction lin then
           let
             entries = map mkEntry subs;
-            entryOfSubset =
-              S: head (filter (e: e.subset == S) entries);
+            entryOfSubset = S: head (filter (e: e.subset == S) entries);
             pairs = concatMap (
-              a:
-              concatMap (
-                b: if properSubset a b then [ { inherit a b; } ] else [ ]
-              ) subs
+              a: concatMap (b: if properSubset a b then [ { inherit a b; } ] else [ ]) subs
             ) subs;
             bad = if length D > 8 then [ ] else filter (p: lin (entryOfSubset p.b) (entryOfSubset p.a)) pairs;
           in
@@ -187,24 +191,27 @@ let
             map (e: e.subset) (sort (a: b: lin a b) entries)
         else if lin.kind == "dimOrder" then
           let
-            _ = validateDimOrder D lin.dims;
             rank = d: indexOf lin.dims d;
             key = S: [ (length S) ] ++ sortDesc (map rank S);
           in
-          sort (a: b: lexLt (key a) (key b)) subs
+          builtins.seq (validateDimOrder D lin.dims) (sort (a: b: lexLt (key a) (key b)) subs)
         else
           let
-            _ = validateByRank D lin.ranks;
             key = S: sortDesc (map (d: lin.ranks.${d}) S);
           in
-          sort (a: b: lexLt (key a) (key b)) subs;
+          builtins.seq (validateByRank D lin.ranks) (sort (a: b: lexLt (key a) (key b)) subs);
     in
-    imap0 (rank: S: {
-      fixed = projectCoords S;
-      free = filter (d: !(elem d S)) D;
-      slice = view.sliceView pg (projectCoords S);
-      inherit rank;
-    }) sortedSubs;
+    # Force coords validation eagerly (unknown/missing/not-a-node/not-a-member) — the chain records
+    # themselves never force it, so `seq` makes the definition-time errors fire. Pointwise validation
+    # never scans a factor's `nodes` (law P10), so this stays green under the throwing-nodes fixture.
+    builtins.seq _validated (
+      imap0 (rank: S: {
+        fixed = projectCoords S;
+        free = filter (d: !(elem d S)) D;
+        slice = view.sliceView pg (projectCoords S);
+        inherit rank;
+      }) sortedSubs
+    );
 
   showSubset = dims: "{" + concatStringsSep "," dims + "}";
 in

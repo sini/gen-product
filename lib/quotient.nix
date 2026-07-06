@@ -28,7 +28,12 @@ let
     {
       classOf,
       key ? (t: t.id_hash),
-      classData ? (t: members: { class = t; inherit members; }),
+      classData ? (
+        t: members: {
+          class = t;
+          inherit members;
+        }
+      ),
       keepSelfLoops ? true,
     }:
     let

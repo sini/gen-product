@@ -34,7 +34,14 @@ let
   firstDuplicate =
     xs:
     let
-      go = seen: rest: if rest == [ ] then null else if elem (head rest) seen then head rest else go (seen ++ [ (head rest) ]) (tail rest);
+      go =
+        seen: rest:
+        if rest == [ ] then
+          null
+        else if elem (head rest) seen then
+          head rest
+        else
+          go (seen ++ [ (head rest) ]) (tail rest);
     in
     go [ ] xs;
 
@@ -63,10 +70,30 @@ let
       else
         mkView { inherit def; };
 
-  cartesian = f1: f2: productN "cartesian" [ f1 f2 ];
-  tensor = f1: f2: productN "tensor" [ f1 f2 ];
-  strong = f1: f2: productN "strong" [ f1 f2 ];
-  lexicographic = f1: f2: productN "lexicographic" [ f1 f2 ];
+  cartesian =
+    f1: f2:
+    productN "cartesian" [
+      f1
+      f2
+    ];
+  tensor =
+    f1: f2:
+    productN "tensor" [
+      f1
+      f2
+    ];
+  strong =
+    f1: f2:
+    productN "strong" [
+      f1
+      f2
+    ];
+  lexicographic =
+    f1: f2:
+    productN "lexicographic" [
+      f1
+      f2
+    ];
 in
 {
   inherit
