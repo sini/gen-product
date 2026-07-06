@@ -15,7 +15,10 @@ let
 
   hf = registryFactor "host" hosts;
   uf = registryFactor "user" users;
-  p = gp.productN "cartesian" [ hf uf ];
+  p = gp.productN "cartesian" [
+    hf
+    uf
+  ];
 
   hashes = coords: lib.mapAttrs (_: e: e.id_hash) coords;
 
@@ -33,8 +36,14 @@ let
   # restricted to two of the four host×user cells.
   restricted = gp.restrict p {
     cells = [
-      { host = hosts.H_axon01; user = users.U_sini; }
-      { host = hosts.H_blade01; user = users.U_vic; }
+      {
+        host = hosts.H_axon01;
+        user = users.U_sini;
+      }
+      {
+        host = hosts.H_blade01;
+        user = users.U_vic;
+      }
     ];
   };
 
@@ -55,7 +64,14 @@ in
     };
     # codec opacity: coordsOf recovers the same identities (id_hash) fed in.
     test-codec-opacity = {
-      expr = hashes (gp.coordsOf p (gp.cell p { host = hosts.H_axon02; user = users.U_vic; }));
+      expr = hashes (
+        gp.coordsOf p (
+          gp.cell p {
+            host = hosts.H_axon02;
+            user = users.U_vic;
+          }
+        )
+      );
       expected = {
         host = "H_axon02";
         user = "U_vic";

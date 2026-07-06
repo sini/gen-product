@@ -14,21 +14,45 @@
 }:
 let
   fx = import ./_fixtures/graphs.nix { inherit lib graph; };
-  inherit (fx) registryFactor idFactor hosts users;
+  inherit (fx)
+    registryFactor
+    idFactor
+    hosts
+    users
+    ;
   gp = genProduct;
 
   hf = registryFactor "host" hosts;
   uf = registryFactor "user" users;
-  p = gp.productN "cartesian" [ hf uf ];
+  p = gp.productN "cartesian" [
+    hf
+    uf
+  ];
 
   fails = e: !(builtins.tryEval e).success;
 
   # duplicate-dim: two factors share a dim.
-  dupDim = fails (gp.productN "cartesian" [ hf (registryFactor "host" users) ]);
+  dupDim = fails (
+    gp.productN "cartesian" [
+      hf
+      (registryFactor "host" users)
+    ]
+  );
   # unknown-kind.
-  badKind = fails (gp.productN "octahedral" [ hf uf ]);
+  badKind = fails (
+    gp.productN "octahedral" [
+      hf
+      uf
+    ]
+  );
   # unknown-dim: coords reference an undeclared dim.
-  unknownDim = fails (gp.cell p { host = hosts.H_axon01; user = users.U_sini; env = users.U_vic; });
+  unknownDim = fails (
+    gp.cell p {
+      host = hosts.H_axon01;
+      user = users.U_sini;
+      env = users.U_vic;
+    }
+  );
   # missing-dim: partial coords to cell.
   missingDim = fails (gp.cell p { host = hosts.H_axon01; });
 
@@ -44,26 +68,74 @@ let
     key = e: e.id_hash;
     entryOf = id: if id == "ghost" then throw "no such host" else hosts.${id};
   };
-  pThrow = gp.productN "cartesian" [ throwEntryOf uf ];
-  notNodeThrow = fails (gp.cell pThrow { host = { id_hash = "ghost"; name = "ghost"; }; user = users.U_sini; });
+  pThrow = gp.productN "cartesian" [
+    throwEntryOf
+    uf
+  ];
+  notNodeThrow = fails (
+    gp.cell pThrow {
+      host = {
+        id_hash = "ghost";
+        name = "ghost";
+      };
+      user = users.U_sini;
+    }
+  );
 
   # not-a-node — (c) round-trip-mismatching entryOf (always returns a fixed wrong entry).
   mismatchEntryOf = throwEntryOf // {
-    entryOf = _: { id_hash = "WRONG"; name = "wrong"; };
+    entryOf = _: {
+      id_hash = "WRONG";
+      name = "wrong";
+    };
   };
-  pMismatch = gp.productN "cartesian" [ mismatchEntryOf uf ];
-  notNodeMismatch = fails (gp.cell pMismatch { host = hosts.H_axon01; user = users.U_sini; });
+  pMismatch = gp.productN "cartesian" [
+    mismatchEntryOf
+    uf
+  ];
+  notNodeMismatch = fails (
+    gp.cell pMismatch {
+      host = hosts.H_axon01;
+      user = users.U_sini;
+    }
+  );
 
   # VACUOUS identity-codec path: a non-node id passes `cell` (round-trip trivially holds).
-  idProd = gp.productN "cartesian" [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) ];
-  vacuous = (builtins.tryEval (gp.cell idProd { x = "not-a-real-node"; y = "b0"; })).success;
+  idProd = gp.productN "cartesian" [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+  ];
+  vacuous =
+    (builtins.tryEval (
+      gp.cell idProd {
+        x = "not-a-real-node";
+        y = "b0";
+      }
+    )).success;
 
   # not-a-member on a restricted product.
-  restricted = gp.restrict p { cells = [ { host = hosts.H_axon01; user = users.U_sini; } ]; };
-  notMember = fails (gp.cell restricted { host = hosts.H_blade01; user = users.U_vic; });
+  restricted = gp.restrict p {
+    cells = [
+      {
+        host = hosts.H_axon01;
+        user = users.U_sini;
+      }
+    ];
+  };
+  notMember = fails (
+    gp.cell restricted {
+      host = hosts.H_blade01;
+      user = users.U_vic;
+    }
+  );
 
   # entries-in / entries-out audit: coordsOf returns registry ENTRIES (id_hash + name), not strings.
-  recovered = gp.coordsOf p (gp.cell p { host = hosts.H_axon02; user = users.U_vic; });
+  recovered = gp.coordsOf p (
+    gp.cell p {
+      host = hosts.H_axon02;
+      user = users.U_vic;
+    }
+  );
 in
 {
   flake.tests.identity-errors = {
@@ -123,8 +195,18 @@ in
     };
     # entries-in: the public codec accepts entries (never a "kind:name" string) — round-trip witness.
     test-entries-in-accepted = {
-      expr = gp.cell p (gp.coordsOf p (gp.cell p { host = hosts.H_axon01; user = users.U_sini; }))
-        == gp.cell p { host = hosts.H_axon01; user = users.U_sini; };
+      expr =
+        gp.cell p (
+          gp.coordsOf p (
+            gp.cell p {
+              host = hosts.H_axon01;
+              user = users.U_sini;
+            }
+          )
+        ) == gp.cell p {
+          host = hosts.H_axon01;
+          user = users.U_sini;
+        };
       expected = true;
     };
   };

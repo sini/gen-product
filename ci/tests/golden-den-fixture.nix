@@ -17,23 +17,41 @@ let
   uf = registryFactor "user" users;
 
   # the FULL product (every user on every host) …
-  full = gp.productN "cartesian" [ hf uf ];
+  full = gp.productN "cartesian" [
+    hf
+    uf
+  ];
   # … restricted to the REAL fleet: not every user exists on every host (policy-emitted membership).
   fleet = gp.restrict full {
     relations = [
       {
-        dims = [ "host" "user" ];
+        dims = [
+          "host"
+          "user"
+        ];
         pairs = [
-          { host = hosts.H_axon01; user = users.U_sini; }
-          { host = hosts.H_axon02; user = users.U_sini; }
-          { host = hosts.H_blade01; user = users.U_vic; }
+          {
+            host = hosts.H_axon01;
+            user = users.U_sini;
+          }
+          {
+            host = hosts.H_axon02;
+            user = users.U_sini;
+          }
+          {
+            host = hosts.H_blade01;
+            user = users.U_vic;
+          }
         ];
       }
     ];
   };
 
   # the sini@axon-01 CELL.
-  siniAxon = gp.cell fleet { host = hosts.H_axon01; user = users.U_sini; };
+  siniAxon = gp.cell fleet {
+    host = hosts.H_axon01;
+    user = users.U_sini;
+  };
   siniAxonCoords = gp.coordsOf fleet siniAxon;
 
   # class-share: QUOTIENT the host graph by class.
@@ -46,14 +64,26 @@ let
   classShare = gp.quotient hostsGraph { classOf = h: h.class; };
 
   # matrix instantiation: the CELLS of the fleet.
-  matrix = map (c: { h = c.host.name; u = c.user.name; }) (gp.cells fleet);
+  matrix = map (c: {
+    h = c.host.name;
+    u = c.user.name;
+  }) (gp.cells fleet);
 
   # settings specificity: the CONTAINMENT CHAIN for the sini@axon-01 cell, consumed as an ordinary
   # layer list. A fold-shaped consumer labels each layer by its fixed-dimension subset and takes the
   # MOST-SPECIFIC (last) as the winner — exactly how gen-settings would position a user@host override.
-  chain = gp.containmentChain fleet { host = hosts.H_axon01; user = users.U_sini; } (
-    gp.linearizeByDimOrder [ "host" "user" ]
-  );
+  chain =
+    gp.containmentChain fleet
+      {
+        host = hosts.H_axon01;
+        user = users.U_sini;
+      }
+      (
+        gp.linearizeByDimOrder [
+          "host"
+          "user"
+        ]
+      );
   layerLabels = map (r: gp.show.subset (lib.sort lib.lessThan (builtins.attrNames r.fixed))) chain;
   winner = lib.last layerLabels;
 in
@@ -63,9 +93,18 @@ in
     test-fleet-is-sparse = {
       expr = matrix;
       expected = [
-        { h = "axon-01"; u = "sini"; }
-        { h = "axon-02"; u = "sini"; }
-        { h = "blade-01"; u = "vic"; }
+        {
+          h = "axon-01";
+          u = "sini";
+        }
+        {
+          h = "axon-02";
+          u = "sini";
+        }
+        {
+          h = "blade-01";
+          u = "vic";
+        }
       ];
     };
     # the sini@axon-01 cell round-trips to its coordinate identities.
@@ -88,7 +127,10 @@ in
       expected = [
         {
           class = "cortex";
-          members = [ "axon-01" "axon-02" ];
+          members = [
+            "axon-01"
+            "axon-02"
+          ];
         }
         {
           class = "blade";

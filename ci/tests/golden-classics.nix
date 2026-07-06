@@ -12,10 +12,15 @@ let
   inherit (fx) idFactor;
   gp = genProduct;
 
-  factors = [ (idFactor "x" fx.k2) (idFactor "y" fx.k2) ];
+  factors = [
+    (idFactor "x" fx.k2)
+    (idFactor "y" fx.k2)
+  ];
   mk = kind: gp.productN kind factors;
 
-  c = p: x: y: p.product.cellOf { inherit x y; };
+  c =
+    p: x: y:
+    p.product.cellOf { inherit x y; };
   edgeMap =
     p:
     lib.listToAttrs (
@@ -37,40 +42,200 @@ in
     test-cartesian-is-C4 = {
       expr = edgeMap cart;
       expected = {
-        ${c cart "u" "u"} = neigh cart [ { x = "v"; y = "u"; } { x = "u"; y = "v"; } ];
-        ${c cart "u" "v"} = neigh cart [ { x = "v"; y = "v"; } { x = "u"; y = "u"; } ];
-        ${c cart "v" "u"} = neigh cart [ { x = "u"; y = "u"; } { x = "v"; y = "v"; } ];
-        ${c cart "v" "v"} = neigh cart [ { x = "u"; y = "v"; } { x = "v"; y = "u"; } ];
+        ${c cart "u" "u"} = neigh cart [
+          {
+            x = "v";
+            y = "u";
+          }
+          {
+            x = "u";
+            y = "v";
+          }
+        ];
+        ${c cart "u" "v"} = neigh cart [
+          {
+            x = "v";
+            y = "v";
+          }
+          {
+            x = "u";
+            y = "u";
+          }
+        ];
+        ${c cart "v" "u"} = neigh cart [
+          {
+            x = "u";
+            y = "u";
+          }
+          {
+            x = "v";
+            y = "v";
+          }
+        ];
+        ${c cart "v" "v"} = neigh cart [
+          {
+            x = "u";
+            y = "v";
+          }
+          {
+            x = "v";
+            y = "u";
+          }
+        ];
       };
     };
     # × = 2K2 : each vertex adjacent only to its full-complement (both coordinates flip).
     test-tensor-is-2K2 = {
       expr = edgeMap tens;
       expected = {
-        ${c tens "u" "u"} = neigh tens [ { x = "v"; y = "v"; } ];
-        ${c tens "u" "v"} = neigh tens [ { x = "v"; y = "u"; } ];
-        ${c tens "v" "u"} = neigh tens [ { x = "u"; y = "v"; } ];
-        ${c tens "v" "v"} = neigh tens [ { x = "u"; y = "u"; } ];
+        ${c tens "u" "u"} = neigh tens [
+          {
+            x = "v";
+            y = "v";
+          }
+        ];
+        ${c tens "u" "v"} = neigh tens [
+          {
+            x = "v";
+            y = "u";
+          }
+        ];
+        ${c tens "v" "u"} = neigh tens [
+          {
+            x = "u";
+            y = "v";
+          }
+        ];
+        ${c tens "v" "v"} = neigh tens [
+          {
+            x = "u";
+            y = "u";
+          }
+        ];
       };
     };
     # ⊠ = K4 : every vertex adjacent to all three others.
     test-strong-is-K4 = {
       expr = edgeMap strong;
       expected = {
-        ${c strong "u" "u"} = neigh strong [ { x = "v"; y = "u"; } { x = "u"; y = "v"; } { x = "v"; y = "v"; } ];
-        ${c strong "u" "v"} = neigh strong [ { x = "v"; y = "v"; } { x = "u"; y = "u"; } { x = "v"; y = "u"; } ];
-        ${c strong "v" "u"} = neigh strong [ { x = "u"; y = "u"; } { x = "v"; y = "v"; } { x = "u"; y = "v"; } ];
-        ${c strong "v" "v"} = neigh strong [ { x = "u"; y = "v"; } { x = "v"; y = "u"; } { x = "u"; y = "u"; } ];
+        ${c strong "u" "u"} = neigh strong [
+          {
+            x = "v";
+            y = "u";
+          }
+          {
+            x = "u";
+            y = "v";
+          }
+          {
+            x = "v";
+            y = "v";
+          }
+        ];
+        ${c strong "u" "v"} = neigh strong [
+          {
+            x = "v";
+            y = "v";
+          }
+          {
+            x = "u";
+            y = "u";
+          }
+          {
+            x = "v";
+            y = "u";
+          }
+        ];
+        ${c strong "v" "u"} = neigh strong [
+          {
+            x = "u";
+            y = "u";
+          }
+          {
+            x = "v";
+            y = "v";
+          }
+          {
+            x = "u";
+            y = "v";
+          }
+        ];
+        ${c strong "v" "v"} = neigh strong [
+          {
+            x = "u";
+            y = "v";
+          }
+          {
+            x = "v";
+            y = "u";
+          }
+          {
+            x = "u";
+            y = "u";
+          }
+        ];
       };
     };
     # ∘ = K4 : x-edge reaches both trailing values; x-equal + y-edge reaches the third.
     test-lex-is-K4 = {
       expr = edgeMap lex;
       expected = {
-        ${c lex "u" "u"} = neigh lex [ { x = "v"; y = "u"; } { x = "v"; y = "v"; } { x = "u"; y = "v"; } ];
-        ${c lex "u" "v"} = neigh lex [ { x = "v"; y = "u"; } { x = "v"; y = "v"; } { x = "u"; y = "u"; } ];
-        ${c lex "v" "u"} = neigh lex [ { x = "u"; y = "u"; } { x = "u"; y = "v"; } { x = "v"; y = "v"; } ];
-        ${c lex "v" "v"} = neigh lex [ { x = "u"; y = "u"; } { x = "u"; y = "v"; } { x = "v"; y = "u"; } ];
+        ${c lex "u" "u"} = neigh lex [
+          {
+            x = "v";
+            y = "u";
+          }
+          {
+            x = "v";
+            y = "v";
+          }
+          {
+            x = "u";
+            y = "v";
+          }
+        ];
+        ${c lex "u" "v"} = neigh lex [
+          {
+            x = "v";
+            y = "u";
+          }
+          {
+            x = "v";
+            y = "v";
+          }
+          {
+            x = "u";
+            y = "u";
+          }
+        ];
+        ${c lex "v" "u"} = neigh lex [
+          {
+            x = "u";
+            y = "u";
+          }
+          {
+            x = "u";
+            y = "v";
+          }
+          {
+            x = "v";
+            y = "v";
+          }
+        ];
+        ${c lex "v" "v"} = neigh lex [
+          {
+            x = "u";
+            y = "u";
+          }
+          {
+            x = "u";
+            y = "v";
+          }
+          {
+            x = "v";
+            y = "u";
+          }
+        ];
       };
     };
   };

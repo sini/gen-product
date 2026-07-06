@@ -23,12 +23,18 @@ let
     );
 
   # ── cartesian, loop-free fixed coordinate ──
-  cart = gp.productN "cartesian" [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) ];
+  cart = gp.productN "cartesian" [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+  ];
   cartSlice = gp.slice cart { x = "a0"; };
   freeCart = gp.productN "cartesian" [ (idFactor "y" fx.gB) ];
 
   # ── cartesian, looped fixed coordinate (self-loop at every cell added) ──
-  cartL = gp.productN "cartesian" [ (idFactor "p" fx.gLoop) (idFactor "y" fx.gB) ];
+  cartL = gp.productN "cartesian" [
+    (idFactor "p" fx.gLoop)
+    (idFactor "y" fx.gB)
+  ];
   cartLSlice = gp.slice cartL { p = "l0"; };
   freeCartL = gp.productN "cartesian" [ (idFactor "y" fx.gB) ];
   cartLExpected = lib.listToAttrs (
@@ -45,18 +51,31 @@ let
   );
 
   # ── tensor, loop-free fixed coordinate → edgeless ──
-  tens = gp.productN "tensor" [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) ];
+  tens = gp.productN "tensor" [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+  ];
   tensSlice = gp.slice tens { x = "a0"; };
 
   # ── tensor, looped fixed coordinate → free tensor product ──
-  tensL = gp.productN "tensor" [ (idFactor "p" fx.gLoop) (idFactor "y" fx.gB) ];
+  tensL = gp.productN "tensor" [
+    (idFactor "p" fx.gLoop)
+    (idFactor "y" fx.gB)
+  ];
   tensLSlice = gp.slice tensL { p = "l0"; };
   freeTensL = gp.productN "tensor" [ (idFactor "y" fx.gB) ];
 
   # ── slice composition ──
-  tri = gp.productN "cartesian" [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) (idFactor "z" fx.gChain) ];
+  tri = gp.productN "cartesian" [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+    (idFactor "z" fx.gChain)
+  ];
   stepwise = gp.slice (gp.slice tri { x = "a0"; }) { y = "b0"; };
-  atOnce = gp.slice tri { x = "a0"; y = "b0"; };
+  atOnce = gp.slice tri {
+    x = "a0";
+    y = "b0";
+  };
 in
 {
   flake.tests.slice-induced = {

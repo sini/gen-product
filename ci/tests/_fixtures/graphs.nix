@@ -26,47 +26,79 @@ let
   };
 
   # ── registry-entry factor (coordinates are entries; key = id_hash; entryOf throws on unknown) ──
-  registryFactor =
-    dim: entries:
-    {
-      inherit dim;
-      graph = {
-        nodes = builtins.attrNames entries;
-        edges = _: [ ];
-        parent = _: null;
-        nodeData = id: entries.${id};
-      };
-      key = entry: entry.id_hash;
-      # attrset access throws on an unknown id_hash — the §2.1 entryOf precondition the default
-      # registry path satisfies (pointwise not-a-node detection depends on it).
-      entryOf = id: entries.${id};
+  registryFactor = dim: entries: {
+    inherit dim;
+    graph = {
+      nodes = builtins.attrNames entries;
+      edges = _: [ ];
+      parent = _: null;
+      nodeData = id: entries.${id};
     };
+    key = entry: entry.id_hash;
+    # attrset access throws on an unknown id_hash — the §2.1 entryOf precondition the default
+    # registry path satisfies (pointwise not-a-node detection depends on it).
+    entryOf = id: entries.${id};
+  };
 
   # Mock directed graphs.
   gA = mkDigraph {
-    nodes = [ "a0" "a1" ];
+    nodes = [
+      "a0"
+      "a1"
+    ];
     edges = [ (e "a0" "a1") ]; # a path, no loop
   };
   gB = mkDigraph {
-    nodes = [ "b0" "b1" ];
-    edges = [ (e "b0" "b1") (e "b1" "b0") ]; # symmetric
+    nodes = [
+      "b0"
+      "b1"
+    ];
+    edges = [
+      (e "b0" "b1")
+      (e "b1" "b0")
+    ]; # symmetric
   };
   gLoop = mkDigraph {
-    nodes = [ "l0" "l1" ];
-    edges = [ (e "l0" "l1") (e "l0" "l0") ]; # self-loop on l0
+    nodes = [
+      "l0"
+      "l1"
+    ];
+    edges = [
+      (e "l0" "l1")
+      (e "l0" "l0")
+    ]; # self-loop on l0
   };
   gChain = mkDigraph {
-    nodes = [ "c0" "c1" "c2" ];
-    edges = [ (e "c0" "c1") (e "c1" "c2") ];
+    nodes = [
+      "c0"
+      "c1"
+      "c2"
+    ];
+    edges = [
+      (e "c0" "c1")
+      (e "c1" "c2")
+    ];
   };
   # K2 as a symmetric digraph — the golden-classics factor.
   k2 = mkDigraph {
-    nodes = [ "u" "v" ];
-    edges = [ (e "u" "v") (e "v" "u") ];
+    nodes = [
+      "u"
+      "v"
+    ];
+    edges = [
+      (e "u" "v")
+      (e "v" "u")
+    ];
   };
 
   # Registry entries.
-  mkEntry = h: name: extra: { id_hash = h; inherit name; } // extra;
+  mkEntry =
+    h: name: extra:
+    {
+      id_hash = h;
+      inherit name;
+    }
+    // extra;
   hosts = {
     "H_axon01" = mkEntry "H_axon01" "axon-01" { class = classCortex; };
     "H_axon02" = mkEntry "H_axon02" "axon-02" { class = classCortex; };
@@ -90,7 +122,9 @@ let
   };
 
   # ── brute-force adjacency oracle (independent of lib/adjacency.nix) ──
-  edgeIn = g: a: b: elem b (g.edges a);
+  edgeIn =
+    g: a: b:
+    elem b (g.edges a);
 
   # u, v are coords (dim -> node id); factorsList is the ordered [ idFactor ] list.
   oraclePred =
@@ -116,7 +150,8 @@ let
       lib.all (d: hasEdge d) dims
     else if kind == "strong" then
       lib.all (d: eq d || hasEdge d) dims && lib.any (d: hasEdge d) dims
-    else # lexicographic
+    # lexicographic
+    else
       lib.any (j: (lib.all (i: eq (at i)) (lib.range 0 (j - 1))) && hasEdge (at j)) idx;
 
   # Edge map of the product under test: { cellId = sorted [ cellId ]; }.

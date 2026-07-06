@@ -13,24 +13,49 @@ let
   gp = genProduct;
 
   # hosts-by-class fixture: five hosts in two classes, with edges within and across classes.
-  cA = { id_hash = "cA"; name = "A"; };
-  cB = { id_hash = "cB"; name = "B"; };
+  cA = {
+    id_hash = "cA";
+    name = "A";
+  };
+  cB = {
+    id_hash = "cB";
+    name = "B";
+  };
   hostData = {
-    h1 = { class = cA; };
-    h2 = { class = cA; };
-    h3 = { class = cB; };
-    h4 = { class = cB; };
-    h5 = { class = cA; };
+    h1 = {
+      class = cA;
+    };
+    h2 = {
+      class = cA;
+    };
+    h3 = {
+      class = cB;
+    };
+    h4 = {
+      class = cB;
+    };
+    h5 = {
+      class = cA;
+    };
   };
   edges = {
-    h1 = [ "h2" "h3" ]; # intra-class (h2) + cross-class (h3)
+    h1 = [
+      "h2"
+      "h3"
+    ]; # intra-class (h2) + cross-class (h3)
     h2 = [ "h1" ];
     h3 = [ "h4" ]; # intra-class B
     h4 = [ "h1" ]; # cross-class B->A
     h5 = [ ];
   };
   hostsGraph = {
-    nodes = [ "h1" "h2" "h3" "h4" "h5" ];
+    nodes = [
+      "h1"
+      "h2"
+      "h3"
+      "h4"
+      "h5"
+    ];
     edges = id: edges.${id} or [ ];
     parent = _: null;
     nodeData = id: hostData.${id};
@@ -50,12 +75,9 @@ let
   # completeness oracle: every quotient edge is witnessed by a member edge.
   completeness = lib.all (
     C:
-    lib.all (
-      Ct:
-      lib.any (
-        m: lib.any (t: classOf t == Ct) (edges.${m} or [ ])
-      ) (q.nodeData C).members
-    ) (q.edges C)
+    lib.all (Ct: lib.any (m: lib.any (t: classOf t == Ct) (edges.${m} or [ ])) (q.nodeData C).members) (
+      q.edges C
+    )
   ) q.nodes;
 in
 {
@@ -63,12 +85,25 @@ in
     # pinned first-seen class order.
     test-class-nodes-pinned = {
       expr = q.nodes;
-      expected = [ "cA" "cB" ];
+      expected = [
+        "cA"
+        "cB"
+      ];
     };
     # members grouped, in input node order.
     test-class-members = {
       expr = map (C: (q.nodeData C).members) q.nodes;
-      expected = [ [ "h1" "h2" "h5" ] [ "h3" "h4" ] ];
+      expected = [
+        [
+          "h1"
+          "h2"
+          "h5"
+        ]
+        [
+          "h3"
+          "h4"
+        ]
+      ];
     };
     test-soundness = {
       expr = soundness;
@@ -86,8 +121,14 @@ in
         cB = lib.sort lib.lessThan (q.edges "cB");
       };
       expected = {
-        cA = [ "cA" "cB" ];
-        cB = [ "cA" "cB" ];
+        cA = [
+          "cA"
+          "cB"
+        ];
+        cB = [
+          "cA"
+          "cB"
+        ];
       };
     };
     # keepSelfLoops = false removes exactly the intra-class loops.

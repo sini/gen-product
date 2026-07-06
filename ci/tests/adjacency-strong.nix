@@ -11,15 +11,25 @@ let
   inherit (fx) idFactor implEdgeMap oracleEdgeMap;
   gp = genProduct;
 
-  binFactors = [ (idFactor "x" fx.gB) (idFactor "y" fx.gB) ];
+  binFactors = [
+    (idFactor "x" fx.gB)
+    (idFactor "y" fx.gB)
+  ];
   bin = gp.productN "strong" binFactors;
   cart = gp.productN "cartesian" binFactors;
   tens = gp.productN "tensor" binFactors;
 
-  triFactors = [ (idFactor "x" fx.gB) (idFactor "y" fx.gB) (idFactor "z" fx.gChain) ];
+  triFactors = [
+    (idFactor "x" fx.gB)
+    (idFactor "y" fx.gB)
+    (idFactor "z" fx.gChain)
+  ];
   tri = gp.productN "strong" triFactors;
 
-  loopFactors = [ (idFactor "p" fx.gLoop) (idFactor "q" fx.gB) ];
+  loopFactors = [
+    (idFactor "p" fx.gLoop)
+    (idFactor "q" fx.gB)
+  ];
   loop = gp.productN "strong" loopFactors;
 
   cells = gp.cells bin;

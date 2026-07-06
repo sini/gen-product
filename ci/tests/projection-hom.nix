@@ -28,18 +28,40 @@ let
       }) (p.edges cid)
     ) (gp.cells p);
 
-  edgeIn = proj: a: b: lib.elem b (proj.edges a);
+  edgeIn =
+    proj: a: b:
+    lib.elem b (proj.edges a);
   # weak: edge OR collapse; strict: edge.
-  weakOk = proj: ed: let a = proj.ofCell ed.src; b = proj.ofCell ed.dst; in a == b || edgeIn proj a b;
-  strictOk = proj: ed: let a = proj.ofCell ed.src; b = proj.ofCell ed.dst; in edgeIn proj a b;
+  weakOk =
+    proj: ed:
+    let
+      a = proj.projection.ofCell ed.src;
+      b = proj.projection.ofCell ed.dst;
+    in
+    a == b || edgeIn proj a b;
+  strictOk =
+    proj: ed:
+    let
+      a = proj.projection.ofCell ed.src;
+      b = proj.projection.ofCell ed.dst;
+    in
+    edgeIn proj a b;
 
-  bin = f: gp.productN f [ (idFactor "x" fx.gB) (idFactor "y" fx.gB) ];
+  bin =
+    f:
+    gp.productN f [
+      (idFactor "x" fx.gB)
+      (idFactor "y" fx.gB)
+    ];
 
   tens = bin "tensor";
   cart = bin "cartesian";
   strong = bin "strong";
 
-  lexF = [ (idFactor "x" fx.gA) (idFactor "y" fx.gChain) ];
+  lexF = [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gChain)
+  ];
   lex = gp.productN "lexicographic" lexF;
 in
 {

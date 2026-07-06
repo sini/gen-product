@@ -12,14 +12,24 @@ let
   inherit (fx) idFactor implEdgeMap oracleEdgeMap;
   gp = genProduct;
 
-  xy = [ (idFactor "x" fx.gA) (idFactor "y" fx.gChain) ];
+  xy = [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gChain)
+  ];
   lexXY = gp.productN "lexicographic" xy;
 
-  tri = [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) (idFactor "z" fx.gChain) ];
+  tri = [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+    (idFactor "z" fx.gChain)
+  ];
   lexTri = gp.productN "lexicographic" tri;
 
   # swapped factor order — a DIFFERENT product.
-  yx = [ (idFactor "y" fx.gChain) (idFactor "x" fx.gA) ];
+  yx = [
+    (idFactor "y" fx.gChain)
+    (idFactor "x" fx.gA)
+  ];
   lexYX = gp.productN "lexicographic" yx;
 in
 {
@@ -36,19 +46,50 @@ in
     # ranges over ALL of gChain's nodes { c0, c1, c2 } — 3 targets from the leading move alone, plus
     # the trailing move (a0 equal, c0 -> c1). Assert the leading fan-out is present in full.
     test-trailing-fanout = {
-      expr = lib.all (yid: lib.elem (gp.cell lexXY { x = "a1"; y = yid; }) (lexXY.edges (gp.cell lexXY { x = "a0"; y = "c0"; }))) [
-        "c0"
-        "c1"
-        "c2"
-      ];
+      expr =
+        lib.all
+          (
+            yid:
+            lib.elem
+              (gp.cell lexXY {
+                x = "a1";
+                y = yid;
+              })
+              (
+                lexXY.edges (
+                  gp.cell lexXY {
+                    x = "a0";
+                    y = "c0";
+                  }
+                )
+              )
+          )
+          [
+            "c0"
+            "c1"
+            "c2"
+          ];
       expected = true;
     };
     # Order sensitivity: swapping the two factors changes the edge set (negative test). Compare the
     # out-neighbour COUNT of a corresponding cell — leading gChain fans out gA's 2 nodes differently.
     test-factor-swap-differs = {
       expr =
-        (lib.length (lexXY.edges (gp.cell lexXY { x = "a0"; y = "c0"; })))
-        == (lib.length (lexYX.edges (gp.cell lexYX { x = "a0"; y = "c0"; })));
+        (lib.length (
+          lexXY.edges (
+            gp.cell lexXY {
+              x = "a0";
+              y = "c0";
+            }
+          )
+        )) == (lib.length (
+          lexYX.edges (
+            gp.cell lexYX {
+              x = "a0";
+              y = "c0";
+            }
+          )
+        ));
       expected = false;
     };
   };

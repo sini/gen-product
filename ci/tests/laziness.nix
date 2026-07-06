@@ -19,7 +19,14 @@ let
   # A factor whose node list explodes when forced, but whose edges/nodeData are fine pointwise.
   throwingGraph = {
     nodes = throw "P10: nodes must not be forced";
-    edges = id: if id == "t0" then [ "t1" ] else if id == "t1" then [ "t0" ] else [ ];
+    edges =
+      id:
+      if id == "t0" then
+        [ "t1" ]
+      else if id == "t1" then
+        [ "t0" ]
+      else
+        [ ];
     parent = _: null;
     nodeData = id: id;
   };
@@ -30,17 +37,35 @@ let
   # force a value deeply enough to trip a lazy throw.
   force = v: builtins.deepSeq v true;
 
-  cart = gp.productN "cartesian" [ tf gy ];
-  tens = gp.productN "tensor" [ tf gy ];
-  strong = gp.productN "strong" [ tf gy ];
+  cart = gp.productN "cartesian" [
+    tf
+    gy
+  ];
+  tens = gp.productN "tensor" [
+    tf
+    gy
+  ];
+  strong = gp.productN "strong" [
+    tf
+    gy
+  ];
   # tf trailing (final) AND the leading factor sits at a dead-end node (a1 has no out-edge), so no
   # earlier dim advances → the trailing factor's nodes are never enumerated. Safe.
-  lex = gp.productN "lexicographic" [ (idFactor "ya" fx.gA) tf ];
+  lex = gp.productN "lexicographic" [
+    (idFactor "ya" fx.gA)
+    tf
+  ];
   # tf trailing, but the leading factor advances (b0 -> b1), so the non-final move forces the trailing
   # (throwing) factor's nodes → throws (the documented lexicographic exception).
-  lexLeadThrow = gp.productN "lexicographic" [ (idFactor "yb" fx.gB) tf ];
+  lexLeadThrow = gp.productN "lexicographic" [
+    (idFactor "yb" fx.gB)
+    tf
+  ];
 
-  cid = gp.cell cart { t = "t0"; y = "b0"; };
+  cid = gp.cell cart {
+    t = "t0";
+    y = "b0";
+  };
 in
 {
   flake.tests.laziness = {
@@ -64,11 +89,29 @@ in
       expected = true;
     };
     test-tensor-edges = {
-      expr = succeeds (force (tens.edges (gp.cell tens { t = "t0"; y = "b0"; })));
+      expr = succeeds (
+        force (
+          tens.edges (
+            gp.cell tens {
+              t = "t0";
+              y = "b0";
+            }
+          )
+        )
+      );
       expected = true;
     };
     test-strong-edges = {
-      expr = succeeds (force (strong.edges (gp.cell strong { t = "t0"; y = "b0"; })));
+      expr = succeeds (
+        force (
+          strong.edges (
+            gp.cell strong {
+              t = "t0";
+              y = "b0";
+            }
+          )
+        )
+      );
       expected = true;
     };
     test-nodeData-succeeds = {
@@ -92,17 +135,40 @@ in
     test-chain-construction-succeeds = {
       expr = succeeds (
         force (
-          map (r: {
-            inherit (r) free rank;
-            fixed = lib.mapAttrs (_: v: v) r.fixed;
-          }) (gp.containmentChain cart { t = "t0"; y = "b0"; } (gp.linearizeByDimOrder [ "t" "y" ]))
+          map
+            (r: {
+              inherit (r) free rank;
+              fixed = lib.mapAttrs (_: v: v) r.fixed;
+            })
+            (
+              gp.containmentChain cart
+                {
+                  t = "t0";
+                  y = "b0";
+                }
+                (
+                  gp.linearizeByDimOrder [
+                    "t"
+                    "y"
+                  ]
+                )
+            )
         )
       );
       expected = true;
     };
     # lexicographic with the throwing factor TRAILING (final) and no earlier dim advancing: safe.
     test-lex-trailing-throw-safe = {
-      expr = succeeds (force (lex.edges (gp.cell lex { ya = "a1"; t = "t0"; })));
+      expr = succeeds (
+        force (
+          lex.edges (
+            gp.cell lex {
+              ya = "a1";
+              t = "t0";
+            }
+          )
+        )
+      );
       expected = true;
     };
 
@@ -120,7 +186,14 @@ in
     # lexicographic edges in a NON-final dim force the trailing factor's nodes → throws.
     test-lex-nonfinal-forces-trailing = {
       expr = succeeds (
-        force (lexLeadThrow.edges (gp.cell lexLeadThrow { yb = "b0"; t = "t0"; }))
+        force (
+          lexLeadThrow.edges (
+            gp.cell lexLeadThrow {
+              yb = "b0";
+              t = "t0";
+            }
+          )
+        )
       );
       expected = false;
     };

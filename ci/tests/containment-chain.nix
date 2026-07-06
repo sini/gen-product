@@ -11,13 +11,22 @@
 }:
 let
   fx = import ./_fixtures/graphs.nix { inherit lib graph; };
-  inherit (fx) registryFactor hosts users envs;
+  inherit (fx)
+    registryFactor
+    hosts
+    users
+    envs
+    ;
   gp = genProduct;
 
   ef = registryFactor "env" envs;
   hf = registryFactor "host" hosts;
   uf = registryFactor "user" users;
-  p = gp.productN "cartesian" [ ef hf uf ];
+  p = gp.productN "cartesian" [
+    ef
+    hf
+    uf
+  ];
 
   c = {
     env = envs.E_prod;
@@ -26,9 +35,14 @@ let
   };
 
   # each chain entry → its sorted fixed-dimension names (identifies the subset).
-  chainSubsets = lin: map (r: lib.sort lib.lessThan (builtins.attrNames r.fixed)) (gp.containmentChain p c lin);
+  chainSubsets =
+    lin: map (r: lib.sort lib.lessThan (builtins.attrNames r.fixed)) (gp.containmentChain p c lin);
 
-  dimOrder = gp.linearizeByDimOrder [ "env" "host" "user" ];
+  dimOrder = gp.linearizeByDimOrder [
+    "env"
+    "host"
+    "user"
+  ];
   ranked = gp.linearizations.byRank {
     env = 1;
     host = 2;
@@ -52,30 +66,93 @@ let
       ) (lib.range (i + 1) (n - 1))
     ) (lib.range 0 (n - 1));
 
-  stripped = lin: map (r: { fixed = lib.mapAttrs (_: e: e.id_hash) r.fixed; inherit (r) free rank; }) (gp.containmentChain p c lin);
+  stripped =
+    lin:
+    map (r: {
+      fixed = lib.mapAttrs (_: e: e.id_hash) r.fixed;
+      inherit (r) free rank;
+    }) (gp.containmentChain p c lin);
 
   # degenerate inputs.
-  missingRank = builtins.tryEval (chainSubsets (gp.linearizations.byRank { env = 1; host = 2; }));
-  dupRank = builtins.tryEval (chainSubsets (gp.linearizations.byRank { env = 1; host = 2; user = 2; }));
-  missingDimOrder = builtins.tryEval (chainSubsets (gp.linearizeByDimOrder [ "env" "host" ]));
-  dupDimOrder = builtins.tryEval (chainSubsets (gp.linearizeByDimOrder [ "env" "host" "user" "host" ]));
+  missingRank = builtins.tryEval (
+    chainSubsets (
+      gp.linearizations.byRank {
+        env = 1;
+        host = 2;
+      }
+    )
+  );
+  dupRank = builtins.tryEval (
+    chainSubsets (
+      gp.linearizations.byRank {
+        env = 1;
+        host = 2;
+        user = 2;
+      }
+    )
+  );
+  missingDimOrder = builtins.tryEval (
+    chainSubsets (
+      gp.linearizeByDimOrder [
+        "env"
+        "host"
+      ]
+    )
+  );
+  dupDimOrder = builtins.tryEval (
+    chainSubsets (
+      gp.linearizeByDimOrder [
+        "env"
+        "host"
+        "user"
+        "host"
+      ]
+    )
+  );
   # extra keys/names for non-product dims are IGNORED (a shared fleet-wide table applies unchanged).
-  extraRankKey = chainSubsets (gp.linearizations.byRank { env = 1; host = 2; user = 3; cell = 9; });
-  extraDimName = chainSubsets (gp.linearizeByDimOrder [ "extra" "env" "host" "user" ]);
+  extraRankKey = chainSubsets (
+    gp.linearizations.byRank {
+      env = 1;
+      host = 2;
+      user = 3;
+      cell = 9;
+    }
+  );
+  extraDimName = chainSubsets (
+    gp.linearizeByDimOrder [
+      "extra"
+      "env"
+      "host"
+      "user"
+    ]
+  );
 
   badComparator = builtins.tryEval (
-    chainSubsets (a: b: lib.length (builtins.attrNames a.fixed) > lib.length (builtins.attrNames b.fixed))
+    chainSubsets (
+      a: b: lib.length (builtins.attrNames a.fixed) > lib.length (builtins.attrNames b.fixed)
+    )
   );
 
   # restricted product chain + not-a-member coords.
   restricted = gp.restrict p {
-    cells = [ c { env = envs.E_prod; host = hosts.H_blade01; user = users.U_vic; } ];
+    cells = [
+      c
+      {
+        env = envs.E_prod;
+        host = hosts.H_blade01;
+        user = users.U_vic;
+      }
+    ];
   };
   chainOnRestricted = map (r: lib.sort lib.lessThan (builtins.attrNames r.fixed)) (
     gp.containmentChain restricted c dimOrder
   );
   nonMemberChain = builtins.tryEval (
-    gp.containmentChain restricted { env = envs.E_dev; host = hosts.H_axon02; user = users.U_vic; } dimOrder
+    gp.containmentChain restricted {
+      env = envs.E_dev;
+      host = hosts.H_axon02;
+      user = users.U_vic;
+    } dimOrder
   );
 in
 {
@@ -88,10 +165,23 @@ in
         [ "env" ]
         [ "host" ]
         [ "user" ]
-        [ "env" "host" ]
-        [ "env" "user" ]
-        [ "host" "user" ]
-        [ "env" "host" "user" ]
+        [
+          "env"
+          "host"
+        ]
+        [
+          "env"
+          "user"
+        ]
+        [
+          "host"
+          "user"
+        ]
+        [
+          "env"
+          "host"
+          "user"
+        ]
       ];
     };
     # top-rank-interleave golden — byRank puts {env,host} BEFORE {user}.
@@ -101,11 +191,24 @@ in
         [ ]
         [ "env" ]
         [ "host" ]
-        [ "env" "host" ]
+        [
+          "env"
+          "host"
+        ]
         [ "user" ]
-        [ "env" "user" ]
-        [ "host" "user" ]
-        [ "env" "host" "user" ]
+        [
+          "env"
+          "user"
+        ]
+        [
+          "host"
+          "user"
+        ]
+        [
+          "env"
+          "host"
+          "user"
+        ]
       ];
     };
     # the two linearizations differ exactly on {env,host} vs {user}.
@@ -125,7 +228,11 @@ in
       };
       expected = {
         first = [ ];
-        last = [ "env" "host" "user" ];
+        last = [
+          "env"
+          "host"
+          "user"
+        ];
       };
     };
     # linear-extension property for both.
@@ -181,10 +288,23 @@ in
         [ "env" ]
         [ "host" ]
         [ "user" ]
-        [ "env" "host" ]
-        [ "env" "user" ]
-        [ "host" "user" ]
-        [ "env" "host" "user" ]
+        [
+          "env"
+          "host"
+        ]
+        [
+          "env"
+          "user"
+        ]
+        [
+          "host"
+          "user"
+        ]
+        [
+          "env"
+          "host"
+          "user"
+        ]
       ];
     };
     # not-a-member coords on a restricted product error.

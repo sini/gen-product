@@ -25,8 +25,16 @@ let
   gy = idFactor "y" fx.gB;
 
   # G □ K1 ≅ G : product a 2-factor where one factor is a singleton loop-free K1-like factor.
-  k1Factor = idFactor "unit" (fx.mkDigraph { nodes = [ "*" ]; edges = [ ]; });
-  cartUnit = gp.productN "cartesian" [ gy k1Factor ];
+  k1Factor = idFactor "unit" (
+    fx.mkDigraph {
+      nodes = [ "*" ];
+      edges = [ ];
+    }
+  );
+  cartUnit = gp.productN "cartesian" [
+    gy
+    k1Factor
+  ];
   unary = gp.productN "cartesian" [ gy ];
 in
 {
@@ -39,7 +47,12 @@ in
         "strong"
         "lexicographic"
       ];
-      expected = [ 1 1 1 1 ];
+      expected = [
+        1
+        1
+        1
+        1
+      ];
     };
     test-k1-edgeless = {
       expr = map (kind: (k1 kind).edges (builtins.head (k1 kind).nodes)) [
@@ -48,7 +61,12 @@ in
         "strong"
         "lexicographic"
       ];
-      expected = [ [ ] [ ] [ ] [ ] ];
+      expected = [
+        [ ]
+        [ ]
+        [ ]
+        [ ]
+      ];
     };
     # unary product is isomorphic to the factor (edge set matches under the coord codec).
     test-unary-iso-to-factor = {
@@ -62,14 +80,29 @@ in
       expected = lib.length (gp.cells unary);
     };
     test-cartesian-k1-unit-edge = {
-      expr = map (t: gp.coordsOf cartUnit t) (cartUnit.edges (gp.cell cartUnit { y = "b0"; unit = "*"; }));
-      expected = [ { y = "b1"; unit = "*"; } ];
+      expr = map (t: gp.coordsOf cartUnit t) (
+        cartUnit.edges (
+          gp.cell cartUnit {
+            y = "b0";
+            unit = "*";
+          }
+        )
+      );
+      expected = [
+        {
+          y = "b1";
+          unit = "*";
+        }
+      ];
     };
     # tensor with a loop-free K1 is EDGELESS (documented non-unit behaviour pinned).
     test-tensor-k1-edgeless = {
       expr =
         let
-          t = gp.productN "tensor" [ gy k1Factor ];
+          t = gp.productN "tensor" [
+            gy
+            k1Factor
+          ];
         in
         lib.all (c: t.edges (t.product.cellOf c) == [ ]) (gp.cells t);
       expected = true;

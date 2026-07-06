@@ -12,13 +12,23 @@ let
   inherit (fx) idFactor implEdgeMap oracleEdgeMap;
   gp = genProduct;
 
-  binFactors = [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) ];
+  binFactors = [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+  ];
   bin = gp.productN "cartesian" binFactors;
 
-  triFactors = [ (idFactor "x" fx.gA) (idFactor "y" fx.gB) (idFactor "z" fx.gChain) ];
+  triFactors = [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gB)
+    (idFactor "z" fx.gChain)
+  ];
   tri = gp.productN "cartesian" triFactors;
 
-  loopFactors = [ (idFactor "p" fx.gLoop) (idFactor "q" fx.gB) ];
+  loopFactors = [
+    (idFactor "p" fx.gLoop)
+    (idFactor "q" fx.gB)
+  ];
   loop = gp.productN "cartesian" loopFactors;
 in
 {
@@ -37,10 +47,23 @@ in
     };
     # A concrete edge: (a0,b0) moves x → (a1,b0) and y → (a0,b1), nothing else.
     test-concrete-neighbours = {
-      expr = lib.sort lib.lessThan (bin.edges (gp.cell bin { x = "a0"; y = "b0"; }));
+      expr = lib.sort lib.lessThan (
+        bin.edges (
+          gp.cell bin {
+            x = "a0";
+            y = "b0";
+          }
+        )
+      );
       expected = lib.sort lib.lessThan [
-        (gp.cell bin { x = "a1"; y = "b0"; })
-        (gp.cell bin { x = "a0"; y = "b1"; })
+        (gp.cell bin {
+          x = "a1";
+          y = "b0";
+        })
+        (gp.cell bin {
+          x = "a0";
+          y = "b1";
+        })
       ];
     };
   };

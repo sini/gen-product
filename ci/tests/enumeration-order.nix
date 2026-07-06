@@ -13,13 +13,20 @@ let
   inherit (fx) idFactor mkDigraph;
   gp = genProduct;
 
-  cart = gp.productN "cartesian" [ (idFactor "x" fx.gA) (idFactor "y" fx.gChain) ];
+  cart = gp.productN "cartesian" [
+    (idFactor "x" fx.gA)
+    (idFactor "y" fx.gChain)
+  ];
   cellCoords = c: map (co: { inherit (co) x y; }) (gp.cells c);
 
   # a factor with a deliberately UNSORTED node order (n2, n0, n1) — enumeration must preserve it, not
   # sort it.
   rev = mkDigraph {
-    nodes = [ "n2" "n0" "n1" ];
+    nodes = [
+      "n2"
+      "n0"
+      "n1"
+    ];
     edges = [ ];
   };
   revProd = gp.productN "cartesian" [ (idFactor "r" rev) ];
@@ -30,36 +37,89 @@ in
     test-cells-row-major = {
       expr = cellCoords cart;
       expected = [
-        { x = "a0"; y = "c0"; }
-        { x = "a0"; y = "c1"; }
-        { x = "a0"; y = "c2"; }
-        { x = "a1"; y = "c0"; }
-        { x = "a1"; y = "c1"; }
-        { x = "a1"; y = "c2"; }
+        {
+          x = "a0";
+          y = "c0";
+        }
+        {
+          x = "a0";
+          y = "c1";
+        }
+        {
+          x = "a0";
+          y = "c2";
+        }
+        {
+          x = "a1";
+          y = "c0";
+        }
+        {
+          x = "a1";
+          y = "c1";
+        }
+        {
+          x = "a1";
+          y = "c2";
+        }
       ];
     };
     # per-kind edge generation order (NOT sorted): cartesian emits per moving-dimension in declared
     # order — x's move first, then y's.
     test-cartesian-edge-order = {
-      expr = cart.edges (gp.cell cart { x = "a0"; y = "c0"; });
+      expr = cart.edges (
+        gp.cell cart {
+          x = "a0";
+          y = "c0";
+        }
+      );
       expected = [
-        (gp.cell cart { x = "a1"; y = "c0"; })
-        (gp.cell cart { x = "a0"; y = "c1"; })
+        (gp.cell cart {
+          x = "a1";
+          y = "c0";
+        })
+        (gp.cell cart {
+          x = "a0";
+          y = "c1";
+        })
       ];
     };
     # factor node order preserved (no silent sort).
     test-no-silent-reorder = {
       expr = map (c: c.r) (gp.cells revProd);
-      expected = [ "n2" "n0" "n1" ];
+      expected = [
+        "n2"
+        "n0"
+        "n1"
+      ];
     };
     # tensor edge is the single all-advance target.
     test-tensor-edge-order = {
       expr =
         let
-          t = gp.productN "tensor" [ (idFactor "x" fx.gA) (idFactor "y" fx.gChain) ];
+          t = gp.productN "tensor" [
+            (idFactor "x" fx.gA)
+            (idFactor "y" fx.gChain)
+          ];
         in
-        t.edges (gp.cell t { x = "a0"; y = "c0"; });
-      expected = [ (gp.productN "tensor" [ (idFactor "x" fx.gA) (idFactor "y" fx.gChain) ]).product.cellOf { x = "a1"; y = "c1"; } ];
+        t.edges (
+          gp.cell t {
+            x = "a0";
+            y = "c0";
+          }
+        );
+      expected =
+        let
+          t = gp.productN "tensor" [
+            (idFactor "x" fx.gA)
+            (idFactor "y" fx.gChain)
+          ];
+        in
+        [
+          (t.product.cellOf {
+            x = "a1";
+            y = "c1";
+          })
+        ];
     };
   };
 }
