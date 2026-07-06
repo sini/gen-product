@@ -35,6 +35,14 @@ let
     gy
     k1Factor
   ];
+  strongUnit = gp.productN "strong" [
+    gy
+    k1Factor
+  ];
+  lexUnit = gp.productN "lexicographic" [
+    gy
+    k1Factor
+  ];
   unary = gp.productN "cartesian" [ gy ];
 in
 {
@@ -83,6 +91,52 @@ in
       expr = map (t: gp.coordsOf cartUnit t) (
         cartUnit.edges (
           gp.cell cartUnit {
+            y = "b0";
+            unit = "*";
+          }
+        )
+      );
+      expected = [
+        {
+          y = "b1";
+          unit = "*";
+        }
+      ];
+    };
+    # K1 is a unit for strong: G ⊠ K1 ≅ G. Strong = cartesian ∪ tensor, so the cartesian summand
+    # carries the G-edges even though the unit coordinate is loop-free; cell count matches and each
+    # cell's single out-edge advances only the G dimension (the unit dim stays fixed).
+    test-strong-k1-unit-cells = {
+      expr = lib.length (gp.cells strongUnit);
+      expected = lib.length (gp.cells unary);
+    };
+    test-strong-k1-unit-edge = {
+      expr = map (t: gp.coordsOf strongUnit t) (
+        strongUnit.edges (
+          gp.cell strongUnit {
+            y = "b0";
+            unit = "*";
+          }
+        )
+      );
+      expected = [
+        {
+          y = "b1";
+          unit = "*";
+        }
+      ];
+    };
+    # K1 is a unit for lexicographic: G ∘ K1 ≅ G. With the unit as the trailing factor, its single
+    # node is the only "later unconstrained" completion, so each edge advances only the leading G
+    # dimension — the coordinate-iso witness.
+    test-lex-k1-unit-cells = {
+      expr = lib.length (gp.cells lexUnit);
+      expected = lib.length (gp.cells unary);
+    };
+    test-lex-k1-unit-edge = {
+      expr = map (t: gp.coordsOf lexUnit t) (
+        lexUnit.edges (
+          gp.cell lexUnit {
             y = "b0";
             unit = "*";
           }
