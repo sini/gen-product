@@ -4,8 +4,9 @@
 # order is the declared factor order (pins enumeration order for all kinds; carries adjacency meaning
 # only for lexicographic). The four binary sugars specialize to the textbook G □ H / G × H / G ⊠ H /
 # G ∘ H (Handbook of Product Graphs, Part I). Degenerate arities: `productN kind [ ]` = K1 (one cell,
-# no edges — a unit for cartesian/strong/lexicographic, NOT for tensor, law P9); `productN kind [ f ]`
-# is isomorphic to `f.graph` under the coordinate codec.
+# no edges — a unit for cartesian/strong/lexicographic, but NOT for tensor: the Handbook's direct-
+# product unit is the looped one-vertex graph); `productN kind [ f ]` is isomorphic to `f.graph` under
+# the coordinate codec.
 {
   prelude,
   factor,

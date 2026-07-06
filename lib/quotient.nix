@@ -8,8 +8,8 @@
 # THEORY. Mokhov 2017, *Algebraic Graphs with Class* (§4): `quotient` generalizes the condensation
 # quotient. The quotient map is by construction a STRICT graph homomorphism (loops allowed) — every
 # input edge u -> v yields a quotient edge [u] -> [v] (soundness), and every quotient edge is witnessed
-# by a member edge (completeness), law P12. Quotient is a GLOBAL operation: it forces the input's node
-# enumeration (law P10), building the member index once.
+# by a member edge (completeness) — the standard quotient-map property. Quotient is a GLOBAL operation:
+# it forces the input's node enumeration, building the member index once.
 { prelude }:
 let
   inherit (prelude)

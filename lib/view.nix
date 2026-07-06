@@ -9,11 +9,11 @@
 #   restriction = a membership record | null.
 # The free dimensions are def.dims minus base; a slice speaks FREE coordinates only, and induced edges
 # are computed by reconstructing full coordinates (base ∪ free), taking the full product's adjacency,
-# and filtering back to the slice — the mathematically induced sub-product (law P7).
+# and filtering back to the slice — the mathematically induced sub-product.
 #
 # THEORY. Kahn 1974 (demand-driven structure, inherited via gen-graph's accessor convention): every
 # accessor forces only what a traversal visits. cellId codec = builtins.toJSON of the ordered factor
-# node ids — canonical, injective on each factor's id domain (law P15 codec precondition), and free of
+# node ids — canonical, injective on each factor's id domain (the codec precondition), and free of
 # separator-injection hazards.
 {
   prelude,
@@ -56,7 +56,7 @@ let
     in
     if t.success then (if isString t.value then t.value else toJSON t.value) else "<malformed-entry>";
 
-  # Pointwise not-a-node detection (law P15, reconciled with laziness P10): a coordinate is not-a-node
+  # Pointwise not-a-node detection (reconciled with Kahn 1974 demand-driven laziness): a coordinate is not-a-node
   # iff `key entry` throws, `entryOf (key entry)` throws, or the round-trip `key (entryOf (key entry))`
   # mismatches. Never scans a factor's `nodes` list. Vacuous on the identity codec (round-trip always
   # holds), where non-nodes surface downstream instead.
@@ -99,7 +99,7 @@ let
       keyOf = d: entry: (def.factorsByDim.${d}).key entry;
       baseKeyAt = d: keyOf d base.${d};
 
-      # ── free-coordinate codec (§2.3) ──
+      # ── free-coordinate codec ──
       cellOfFree = coords: toJSON (map (d: keyOf d coords.${d}) freeDims);
       coordsOfFree =
         cellId:
@@ -145,7 +145,7 @@ let
 
       freeCellIdOfKeys = fullKeys: toJSON (map (d: elemAt fullKeys dimPos.${d}) freeDims);
 
-      # ── induced edges (law P7) ──
+      # ── induced edges ──
       edges =
         freeCellId:
         let
@@ -245,7 +245,7 @@ let
     };
 
   # Slice a pgraph: fix a subset of its FREE dimensions. Validates that each named dim is free
-  # (naming a fixed dim is an unknown-dim error, §2.4); base accumulates so slices compose.
+  # (naming a fixed dim is an unknown-dim error); base accumulates so slices compose.
   sliceView =
     pg: partialCoords:
     let

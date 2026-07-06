@@ -3,8 +3,9 @@
 # For a cell c with dimension set D, the slices containing c are in bijection with subsets S ⊆ D (fix
 # c's coordinates on S, leave D \ S free); S ⊆ S' means S' is MORE specific. `containmentChain` returns
 # all 2^|D| subsets — ∅ (whole product, least specific) to D (the cell, most specific) — as a LINEAR
-# EXTENSION of the inclusion order, incomparable subsets ordered by a declared linearization (law P13).
-# It never forces a slice's structure (the chain is metadata; slices are lazy, law P10).
+# EXTENSION of the inclusion order, incomparable subsets ordered by a declared linearization.
+# It never forces a slice's structure — the chain is metadata; slices stay lazy (Kahn 1974 demand
+# discipline).
 #
 # Two canonical linearizations, both provably total (they reject degenerate inputs rather than
 # silently tie-break):
@@ -89,7 +90,7 @@ let
     inherit byRank;
   };
 
-  # ── validations (definition-time, §2.8) ──
+  # ── validations (definition-time) ──
   validateDimOrder =
     D: dims:
     let
@@ -203,7 +204,8 @@ let
     in
     # Force coords validation eagerly (unknown/missing/not-a-node/not-a-member) — the chain records
     # themselves never force it, so `seq` makes the definition-time errors fire. Pointwise validation
-    # never scans a factor's `nodes` (law P10), so this stays green under the throwing-nodes fixture.
+    # never scans a factor's `nodes` (Kahn 1974 demand discipline), so this stays green under the
+    # throwing-nodes fixture.
     builtins.seq _validated (
       imap0 (rank: S: {
         fixed = projectCoords S;

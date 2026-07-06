@@ -3,7 +3,7 @@
 #
 # A membership record is data — { cells ? null; relations ? [ ]; predicate ? (_: true); }. `restrict`
 # CONSUMES it; emitting membership from policies is den-hoag wiring, never this library's concern
-# (structural stratum only). A cell c is a member iff all three clauses hold (§2.6):
+# (structural stratum only). A cell c is a member iff all three clauses hold:
 #   1. cells == null OR c ∈ cells (by cellId);
 #   2. for every relation r, the projection of c onto r.dims occurs in r.pairs (natural join —
 #      relations conjoin, pairs within a relation are alternatives);
@@ -11,7 +11,7 @@
 #
 # Enumeration follows a normative order of preference (strategies 1/2/3) so that a well-specified
 # sparse fleet never materializes the full product; the adjacency path uses only the point test
-# `isMember`, so `edges` of a predicate-restricted product never enumerates (law P11).
+# `isMember`, so `edges` of a predicate-restricted product never enumerates.
 { prelude }:
 let
   inherit (prelude)
@@ -77,7 +77,8 @@ let
   };
 
   # Full row-major lattice enumeration: declared factor order, last dimension varying fastest, each
-  # factor's own `nodes` order preserved (law P14). Forces every factor node list (en-masse, law P10).
+  # factor's own `nodes` order preserved. Forces every factor node list — the en-masse operation, the
+  # documented exception to the Kahn 1974 demand discipline.
   enumerateFull =
     def:
     foldl' (

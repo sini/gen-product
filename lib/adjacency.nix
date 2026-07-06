@@ -31,7 +31,7 @@ let
     ;
 
   # cartesian product of a list of lists: [[a]] -> [[a]]. First list varies slowest, last fastest —
-  # the same row-major discipline as cell enumeration (pinned order, law P14).
+  # the same row-major discipline as cell enumeration (pinned order).
   cartProd = lists: foldl' (acc: xs: concatMap (a: map (x: a ++ [ x ]) xs) acc) [ [ ] ] lists;
 
   replaceAt =
@@ -39,7 +39,7 @@ let
     imap0 (idx: v: if idx == i then w else v) xs;
 
   # targetsFor : kind -> fullKeys(list of factor node ids, declared order) -> factorsList -> [target
-  # key-vectors]. Never scans a factor's `nodes` (Kahn 1974 demand discipline, law P10) EXCEPT the
+  # key-vectors]. Never scans a factor's `nodes` (Kahn 1974 demand discipline) EXCEPT the
   # lexicographic trailing-dim fan-out, which forces trailing node lists by construction.
   targetsFor =
     kind: fullKeys: factorsList:
@@ -51,8 +51,8 @@ let
     if kind == "cartesian" then
       concatMap (i: map (w: replaceAt i w fullKeys) (neighbors i)) idxs
     else if kind == "tensor" then
-      # Every dimension advances. At arity 0 the empty product is the edgeless unit K1 (law P9 refuses
-      # a tensor self-loop here — the tensor unit is the LOOPED one-vertex graph, not K1).
+      # Every dimension advances. At arity 0 the empty product is the edgeless unit K1 — and per the
+      # Handbook the direct-product unit is the LOOPED one-vertex graph, so K1 is deliberately not it.
       (if n == 0 then [ ] else cartProd (map neighbors idxs))
     else if kind == "strong" then
       # Each dimension stays (tag adv=false) or advances via a factor edge (adv=true, possibly a
