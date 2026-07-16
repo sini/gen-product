@@ -3,7 +3,7 @@
 # gen-scope / gen-schema / gen-select is the shared accessor-record convention, not code). A stray
 # `nixpkgs`/`lib.`/`evalModules` tether in the library source fails CI. Scope: lib/**.nix + the root
 # flake.nix + default.nix (NOT ci/, whose harness legitimately uses nixpkgs.lib).
-{ lib, ... }:
+{ genPrelude, lib, ... }:
 let
   libDir = ../../lib;
 
@@ -56,7 +56,7 @@ let
   ];
 
   violations = lib.concatMap (
-    src: map (tok: "${src.name}: '${tok}'") (lib.filter (tok: lib.hasInfix tok src.code) forbidden)
+    src: map (tok: "${src.name}: '${tok}'") (lib.filter (tok: genPrelude.hasInfix tok src.code) forbidden)
   ) sources;
 in
 {
