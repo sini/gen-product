@@ -216,10 +216,39 @@ let
     );
 
   showSubset = dims: "{" + concatStringsSep "," dims + "}";
+
+  # latticeGraph (feature #2) — the boolean lattice 2^D exposed as its COVERING relation (Hasse diagram):
+  # the transitive reduction of subset inclusion, S ⋖ S∪{d} for each d ∈ D\S (Davey & Priestley,
+  # *Introduction to Lattices and Order*, 2nd ed., §1.2/2.5 — covers = adds one atom; the boolean lattice
+  # is the atomistic 2^D). Returned in den's node.query-traversable flat labeled edge shape
+  # `[{ kind; from; to }]`: `kind` is the added dimension (the edge label), `from`/`to` are `showSubset`
+  # subset ids, one edge per added dimension. STRUCTURE ONLY — no linearization is baked in (the
+  # count-major order is a separate ordering discipline over the queried slice set, not a traversal).
+  # Pure metadata over the dimension set; like the chain it never forces a slice (Kahn 1974). S∪{d} is
+  # renormalized to D's declared order (`canonicalize`) so `to` matches the `from`-side node id exactly.
+  latticeGraph =
+    D:
+    let
+      subs = subsets D; # each already in D-declared order (the head-prepend recursion preserves it)
+      canonicalize = S: filter (d: elem d S) D; # reorder S∪{d} to the same keying `subs` uses
+      edges = concatMap (
+        S:
+        map (d: {
+          kind = d;
+          from = showSubset S;
+          to = showSubset (canonicalize (S ++ [ d ]));
+        }) (filter (d: !(elem d S)) D)
+      ) subs;
+    in
+    {
+      nodes = map showSubset subs;
+      inherit edges;
+    };
 in
 {
   inherit
     containmentChain
+    latticeGraph
     linearizeByDimOrder
     linearizations
     ;

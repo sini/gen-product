@@ -131,6 +131,7 @@ quotient  = graph: { classOf, … }: <graph>;     # class-share = quotient by cl
 containmentChain = pgraph: coords: linearization: [ <sliceRecord> ];
 linearizeByDimOrder = dims: <linearization>;    # count-major — the den fleet default
 linearizations.byRank = ranks: <linearization>; # top-rank interleave
+latticeGraph = dims: { nodes; edges; };         # 2^D covering relation (Hasse), node.query-traversable
 
 # error-message helpers (not a rendering API)
 show.cell   = pgraph: coords: string;
@@ -148,6 +149,7 @@ The generality gen-product buys, documented here and wired in den-hoag:
 | class-share | **quotient** of the host graph by class |
 | matrix instantiation | **cells** enumeration |
 | settings specificity | **containmentChain**, consumed by gen-settings as a layer list |
+| specificity lattice as a query | **latticeGraph** — the covering relation of 2^D as dim-labeled adjacency, traversed by den's `node.query` |
 
 ## Testing
 
@@ -173,3 +175,6 @@ The library source (`lib/**.nix`) is verified nixpkgs-lib-free by `ci/tests/puri
   traversal visits — the laziness discipline restated for products.
 - **Mokhov, A. 2017 — _Algebraic Graphs with Class_.** `quotient` generalizes the condensation
   quotient gen-graph already implements; the quotient map is the standard strict homomorphism.
+- **Davey, B. A. & Priestley, H. A. — _Introduction to Lattices and Order_ (2nd ed., CUP, 2002).** The
+  boolean lattice `2^D` and its covering relation / Hasse diagram (§1.2, §2.5): `latticeGraph` exposes
+  the cover `S ⋖ S∪{d}` as dim-labeled adjacency — each cover adds one atom (`2^D` is atomistic).

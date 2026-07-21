@@ -236,6 +236,28 @@ subset pairs (skipped above `|D| > 8`). Both linearizations **reject degenerate 
 duplicated dimension) rather than silently tie-breaking; table keys / list names for dimensions not in
 the product are ignored, so a shared fleet-wide linearization applies to smaller products unchanged.
 
+## Lattice graph
+
+```nix
+latticeGraph = dims: {
+  nodes;   # [ subsetId ]  — every S ⊆ D, id = showSubset S ("{a,b}")
+  edges;   # [ { kind; from; to } ]  — the covering relation, dim-labeled (flat labeled edges)
+};
+```
+
+The subsets `S ⊆ D` form the **boolean lattice** `2^D` under inclusion (`∅` least specific / the whole
+product, `D` most specific / the cell). `latticeGraph` exposes its **covering relation** — the
+transitive reduction / Hasse diagram: `S ⋖ S∪{d}` for each `d ∈ D\S`, one **dim-labeled** edge per added
+dimension (a boolean lattice is atomistic, so each cover adds exactly one atom). Emitted in den's
+`node.query`-traversable **flat labeled edge shape** `[{ kind; from; to }]` — `kind` is the added
+dimension (the edge label), `from`/`to` are `showSubset` subset ids; `S∪{d}` is renormalized to `D`'s
+declared order so `to` matches the `from`-side id exactly.
+
+**Structure only** — no linearization is baked in (the count-major order is a separate ordering
+discipline over the queried slice set — a sort, not a traversal). Pure metadata over the dimension set;
+like the chain it never forces a slice (Kahn 1974). Takes the dimension set directly (coord-independent).
+Boundaries: `D = [ a ]` → 2 nodes, 1 edge; `D = [ ]` → the singleton lattice `{∅}`, 1 node, 0 edges.
+
 ## Display helpers
 
 ```nix
@@ -277,5 +299,6 @@ Each law is a named test group under `ci/tests`.
 | P11 | restriction = induced subgraph; predicate adjacency never enumerates; cells order/dedup; join≡filter |
 | P12 | quotient soundness + completeness; strict homomorphism; keepSelfLoops; pinned orders |
 | P13 | containment chain = linear extension; byRank & linearizeByDimOrder rules; degenerate rejection |
+| P16 | latticeGraph = 2^D covering relation, dim-labeled node.query edges; edge set + boundaries (`[a]`, `[]`) |
 | P14 | pinned enumeration (cells row-major, per-kind edge order, no silent reorder/dedup) |
 | P15 | identity & errors: entries in/out; every error fires; not-a-node fixtures incl. vacuous path |
