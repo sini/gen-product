@@ -36,6 +36,7 @@ let
     unique
     range
     head
+    tail
     concatStringsSep
     ;
   inherit (builtins)
@@ -45,7 +46,7 @@ let
     isString
     ;
   inherit (adjacency) targetsFor;
-  inherit (membership) isMember enumerateFull enumerateMembers;
+  inherit (membership) isMember enumerationOf;
 
   # Render a coordinate entry for an error message — its `.name` if present, else its JSON key.
   # display only; never part of the data vocabulary.
@@ -79,11 +80,18 @@ let
         in
         if !rt.success then true else rt.value != k.value;
 
+  # `enumeration` is REQUIRED and never defaulted. The member set does not depend on `base`, so every
+  # view over one (def, restriction) shares it — but a defaulted `enumeration ? enumerationOf def
+  # restriction` would let a constructor that already holds the value silently re-derive it, which is
+  # the whole cost this argument exists to remove. Requiring it makes "which member set is this
+  # view's" a question every constructor answers rather than one it can forget, and a constructor
+  # added later cannot evaluate without answering it.
   mkView =
     {
       def,
       base ? { },
       restriction ? null,
+      enumeration,
     }:
     let
       allDims = def.dims;
@@ -162,13 +170,26 @@ let
       parent = _cellId: null;
 
       # ── enumeration ──
-      # For a slice we keep only full members that extend `base`, then project to free coords; the
-      # underlying enumeration already dedups (strategies 1/2) and yields distinct full coords, so no
-      # further dedup is required.
+      # For a slice we keep only the shared members that extend `base`, then project to free coords;
+      # the underlying enumeration already dedups (strategies 1/2) and yields distinct full coords, so
+      # no further dedup is required.
+      #
+      # A slice is a FIBER of a projection, so the first base dim is answered by one bucket lookup
+      # rather than by scanning the member set, and only the remaining base dims stay a filter — over
+      # that bucket, not over everything. `fibersByDim`'s domain is `def.dims`, and every base dim was
+      # validated FREE before it entered `base`, so the dim lookup is total; a base coordinate with no
+      # member has no bucket and `or [ ]` yields the empty slice, which is what filtering would have
+      # returned. `builtins.groupBy` preserves member-set order within a bucket.
       cellsList =
         let
-          fulls = if restriction == null then enumerateFull def else enumerateMembers def restriction;
-          extending = filter (c: all (d: keyOf d c.${d} == baseKeyAt d) baseDims) fulls;
+          d0 = head baseDims;
+          narrowed =
+            if baseDims == [ ] then
+              enumeration.members
+            else
+              enumeration.fibersByDim.${d0}.${toJSON (baseKeyAt d0)} or [ ];
+          rest = if baseDims == [ ] then [ ] else tail baseDims;
+          extending = filter (c: all (d: keyOf d c.${d} == baseKeyAt d) rest) narrowed;
         in
         map (
           c:
@@ -237,6 +258,7 @@ let
       __def = def;
       __base = base;
       __restriction = restriction;
+      __enumeration = enumeration;
       __cell = cellValidated;
       __cells = cellsList;
       __freeDims = freeDims;
@@ -264,8 +286,17 @@ let
         def = pg.__def;
         base = pg.__base // partialCoords;
         restriction = pg.__restriction;
+        # `def` and `restriction` are carried through UNCHANGED, which is exactly the hypothesis
+        # under which the parent's member set is this slice's — satisfied by the expression itself
+        # rather than by a claim about it. Slicing is the only constructor that may thread it.
+        enumeration = pg.__enumeration;
       };
 in
 {
-  inherit mkView sliceView notANode;
+  inherit
+    mkView
+    sliceView
+    notANode
+    enumerationOf
+    ;
 }

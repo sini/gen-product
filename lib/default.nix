@@ -18,7 +18,7 @@ let
   chain = import ./chain.nix { inherit prelude view; };
   show = import ./show.nix { inherit prelude; };
 
-  inherit (view) mkView sliceView;
+  inherit (view) mkView sliceView enumerationOf;
   inherit (membership) normalizeMembership conjoin;
   inherit (prelude)
     elem
@@ -66,6 +66,11 @@ let
       def = pg.__def;
       base = pg.__base;
       restriction = combined;
+      # THE RESTRICTION CHANGED, so the member set changed: this site derives, it does not thread
+      # `pg.__enumeration`. Threading the parent's set here is the one way to make sharing wrong
+      # rather than merely fast, which is why the shared value is keyed on (def, restriction) and
+      # not on `def` alone.
+      enumeration = enumerationOf pg.__def combined;
     };
 in
 product

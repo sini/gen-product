@@ -99,6 +99,13 @@ in genProduct.cartesian hostFactor userFactor
   round-trip), so `cell` and `containmentChain` succeed even under `nodes = throw …`. The `en-masse`
   operations (`cells`, `nodes`) and the lexicographic trailing-dimension fan-out are the documented
   exceptions.
+- **One enumeration per (def, restriction).** The member set depends on the product definition and its
+  restriction, never on which coordinates a view has fixed, so a product and every slice of it share a
+  single enumeration instead of each deriving its own — asking a product for H slices costs one
+  enumeration, not H. A view takes that set as a required argument, so the sharing is a property of the
+  construction rather than a cache consulted when present. `restrict` derives a new one, because changing
+  the restriction changes the set. Slicing that shared set is a **fiber lookup** on the fixed dimension,
+  and the relational join indexes its probe side, so neither is a scan.
 - **Identity at the boundary.** Coordinates are **registry entries** keyed by dimension name; cellIds
   are opaque internal keys (canonical `builtins.toJSON` of the ordered factor node ids). No public
   function takes or returns a `"kind:name"` string.

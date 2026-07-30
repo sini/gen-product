@@ -131,6 +131,13 @@ product, `cells` enumerates exactly the members in the restriction's pinned orde
 `en-masse` operations (`O(Π |V_i|)` for a full product); every element stays lazy. Sparse fleets should
 be `restrict`-ed before enumeration.
 
+**One enumeration per (def, restriction), shared by every view over it.** The member set is a function of
+the product definition and its restriction alone — the enumeration entry points take no `base` — so a
+pgraph and all of its slices speak about the *same* set. A view therefore receives that set rather than
+deriving one, which is why enumerating a product and then slicing it H times costs one enumeration and not
+H. `restrict` is the constructor that does **not** share: it changes the restriction, so it derives the
+member set its new restriction denotes.
+
 **gen-select adapter (informative).** gen-select's product adapter consumes `pgraph.nodes` as its
 `cellIds` list and `pgraph.product.coordsOf` as its `coordsFor` accessor.
 
@@ -146,6 +153,14 @@ projectTo = pgraph: dim: <graph>;          # the factor graph of dim, tagged wit
 (re-addressed over free dims), its `edges` are the edges of `p` between those cells, and
 `.product.base` records the fixed coordinates so slices compose (`slice (slice p a) b == slice p (a // b)`, dims disjoint). Self-loops on fixed coordinates are honored: a looped fixed
 coordinate induces a self-loop at every cell (cartesian) or keeps the slice non-edgeless (tensor).
+
+A slice is answered as a **fiber lookup**, not as a scan: the shared member set is partitioned by each
+declared dimension's key (lazily, so a dimension nobody slices on is never partitioned), and fixing a
+coordinate selects that dimension's bucket, leaving only any remaining fixed dimensions to filter over it.
+Order within a bucket is the member-set order, so the pinned enumeration order survives slicing. A fixed
+coordinate with no member yields the empty slice. The partition key is the cellId codec, so it inherits
+that codec's precondition — injectivity on each factor's id domain; a `key` that renders two equal ids
+differently would split one fiber across two buckets and shorten the slice.
 
 `projectTo` returns `factor.graph // { projection = { dim; ofCell; ofCoords; }; }` where
 `ofCell = cellId -> factor entry` and `ofCoords = coords: coords.${dim}`. On a **restricted** product
@@ -180,6 +195,12 @@ order preserved, filtered by (2)+(3); (2) `relations` jointly cover every dimens
 never materializes the full product; (3) filter the full-product enumeration (`O(Π |V_i|)`). Membership
 checks on the adjacency path use point tests, so `edges` of a predicate-restricted product never
 enumerates.
+
+The join in (2) is an equijoin evaluated by **index**: each step groups the relation being joined on the
+shared-dimension key and probes it once per accumulated tuple, rather than rescanning every pair for every
+tuple. Relations whose dimensions are disjoint key to a single bucket and so still give the cross product.
+The first-seen dedup in (1) and (2) applies the cellId codec **once per element**. Both preserve the pinned
+order they had before.
 
 ## Quotient
 

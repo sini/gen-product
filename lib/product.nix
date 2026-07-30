@@ -23,7 +23,7 @@ let
     tail
     ;
   inherit (factor) normalizeFactors;
-  inherit (view) mkView;
+  inherit (view) mkView enumerationOf;
 
   validKinds = [
     "cartesian"
@@ -69,7 +69,12 @@ let
       if dup != null then
         throw "gen-product: duplicate-dim '${dup}' — two factors share a dimension name"
       else
-        mkView { inherit def; };
+        # A fresh `def` and no restriction — there is nothing to share from, so the constructed
+        # product derives its own member set.
+        mkView {
+          inherit def;
+          enumeration = enumerationOf def null;
+        };
 
   cartesian =
     f1: f2:
