@@ -112,7 +112,7 @@ outputs plus the coordinate currency.
 |---|---|---|
 | `cellIds` | `<pgraph>.nodes : [ cellId ]` | `lib/view.nix:204`; `pg.nodes` ⇒ `["[\"H_a\",\"U_s\"]","[\"H_a\",\"U_v\"]",…]` |
 | `coordsFor` | `<pgraph>.product.coordsOf : cellId -> { <dim> = entry; }` | `lib/view.nix:245`, codec `lib/view.nix:112-122`; top-level `coordsOf pg cid` is the same function (`lib/default.nix`) |
-| `parent` (default `_: null`) | `<pgraph>.parent`, constantly `null` | `lib/view.nix:171`; `pg.parent cid` ⇒ `null` |
+| `parent` (default `_: null`) | `<pgraph>.parent`, constantly `null` | `lib/view.nix:parent`; `pg.parent cid` ⇒ `null` |
 | `dataFor` (default `_: { }`) | nothing — gen-product's `nodeData` *is* `coordsOf`, it carries no extra cell data | `lib/view.nix:169` |
 | `coord dim entry` requires `entry ? id_hash` (gen-select `lib/adapters/product.nix:16`) | satisfied on the registry path, where `key` defaults to `entry: entry.id_hash` | `lib/factor.nix:31`; `(gp.coordsOf pg cid).host.id_hash` ⇒ `"H_a"` |
 
@@ -172,7 +172,7 @@ Shared fixtures: `hosts = { H_a; H_b; H_c; }` and `users = { U_s; U_v; }` are ge
 | Quotient node ids are class **keys** (strings from `key`), and intra-class edges become self-loops by default | `lib/quotient.nix:68-80`; `q.nodes` ⇒ `["C_cortex","C_blade"]`, `q.nodeData "C_cortex"` ⇒ `attrNames ["class","members"]` with `members = ["H_a","H_b"]`, `q.edges "C_cortex"` ⇒ `["C_cortex"]`; with `keepSelfLoops = false` ⇒ `[ ]`. Tests: `test-edges-with-loops`, `test-edges-no-loops` (`ci/tests/quotient.nix`) |
 | `cells` and `nodes` enumerate the same set at different types — coords attrsets against cellId strings | `lib/default.nix` (`cells = pg: pg.__cells`), `lib/view.nix:204`; `gp.cells pg` ⇒ 6 entries each `attrNames ["host","user"]`, `pg.nodes` ⇒ 6 JSON strings |
 | Enumeration is pinned row-major in declared factor order, last dimension fastest | `lib/membership.nix:86-95`; `gp.cells pg` ⇒ `H_a/U_s, H_a/U_v, H_b/U_s, H_b/U_v, H_c/U_s, H_c/U_v` (by `id_hash`). Test: `test-cells-row-major` (`ci/tests/enumeration-order.nix`) |
-| `parent` is constantly `null` on products and quotients alike — the lattice is flat | `lib/view.nix:171`, `lib/quotient.nix:81`; `pg.parent cid` ⇒ `null`, `q.parent "C_cortex"` ⇒ `null` |
+| `parent` is constantly `null` on products and quotients alike — the lattice is flat | `lib/view.nix:parent`, `lib/quotient.nix:81`; `pg.parent cid` ⇒ `null`, `q.parent "C_cortex"` ⇒ `null` |
 | cellIds are opaque `builtins.toJSON` of the ordered factor keys | `lib/view.nix:111`; `cid` ⇒ `"[\"H_a\",\"U_s\"]"`. Test: `test-codec-opacity` (`ci/tests/cell-roundtrip.nix`) |
 | The view builder and membership oracle are not on the public surface | `gp ? mkView`, `gp ? isMember`, `gp ? enumerationOf`, `gp ? targetsFor` ⇒ all `false` |
 
