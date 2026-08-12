@@ -1,6 +1,6 @@
 {
   inputs = {
-    gen.url = "github:sini/gen";
+    gen-harness.url = "github:sini/gen-harness";
     gen-prelude.url = "github:sini/gen-prelude";
     # gen-graph is a DEV dependency only: the test suites build mock factor graphs with its
     # `mkGraph` helper and consume its accessor record. It enters ONLY here (a VALUE in ci/), never a
@@ -13,7 +13,7 @@
 
   outputs =
     inputs@{
-      gen,
+      gen-harness,
       gen-prelude,
       gen-graph,
       ...
@@ -23,7 +23,7 @@
         prelude = gen-prelude.lib;
       };
     in
-    gen.lib.mkCi {
+    gen-harness.lib.mkCi {
       inherit inputs;
       name = "gen-product";
       testModules = ./tests;
