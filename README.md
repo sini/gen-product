@@ -115,7 +115,8 @@ in genProduct.cartesian hostFactor userFactor
 
 ## API Reference
 
-The complete surface is documented in [REFERENCE.md](./REFERENCE.md). In brief:
+The complete surface is documented in `gen-specs/gen-product/REFERENCE.md` in the den-architecture papers
+repository — reference specs live there, not in the library repo. In brief:
 
 ```nix
 # constructors
