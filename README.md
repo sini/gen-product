@@ -47,11 +47,11 @@ genProduct.coordsOf fleet cellId          # → { host = <entry>; user = <entry>
 Adjacency per kind — the cell `u = { d_i = u_i }` has an edge to `v = { d_i = v_i }` (writing
 `u_i ~ v_i` for a directed factor edge):
 
-| kind | edge rule |
-|---|---|
-| **cartesian** (`□`) | exactly one dimension has `u_i ~ v_i`; all others equal |
-| **tensor** (`×`) | every dimension has `u_i ~ v_i` |
-| **strong** (`⊠`) | every dimension is equal-or-edge, at least one is an edge |
+| kind                    | edge rule                                                                |
+| ----------------------- | ------------------------------------------------------------------------ |
+| **cartesian** (`□`)     | exactly one dimension has `u_i ~ v_i`; all others equal                  |
+| **tensor** (`×`)        | every dimension has `u_i ~ v_i`                                          |
+| **strong** (`⊠`)        | every dimension is equal-or-edge, at least one is an edge                |
 | **lexicographic** (`∘`) | at the first differing dimension: `u_i ~ v_i`; earlier equal; later free |
 
 These are the standard product definitions applied coordinatewise to **directed** adjacency; on
@@ -60,14 +60,14 @@ K2⊠K2 = K4, K2∘K2 = K4).
 
 ## Gen Ecosystem
 
-| Library | Role |
-|---------|------|
-| [gen-prelude](https://github.com/sini/gen-prelude) | Pure nixpkgs-lib-free utility base |
-| [gen-graph](https://github.com/sini/gen-graph) | Accessor-based graph query combinators (the accessor-record convention gen-product builds on) |
-| [gen-schema](https://github.com/sini/gen-schema) | Typed registries (the `id_hash`/`name` instance shape used as the default coordinate currency) |
-| [gen-scope](https://github.com/sini/gen-scope) | HOAG scope-graph evaluator |
-| [gen-select](https://github.com/sini/gen-select) | Selector algebra (consumes product cells via the cell adapter) |
-| **gen-product** | **This lib** — graph products (Cartesian / tensor / strong / lexicographic; cells, slices, fibers, projections, quotients, restriction, containment chains) |
+| Library                                            | Role                                                                                                                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [gen-prelude](https://github.com/sini/gen-prelude) | Pure nixpkgs-lib-free utility base                                                                                                                          |
+| [gen-graph](https://github.com/sini/gen-graph)     | Accessor-based graph query combinators (the accessor-record convention gen-product builds on)                                                               |
+| [gen-schema](https://github.com/sini/gen-schema)   | Typed registries (the `id_hash`/`name` instance shape used as the default coordinate currency)                                                              |
+| [gen-scope](https://github.com/sini/gen-scope)     | HOAG scope-graph evaluator                                                                                                                                  |
+| [gen-select](https://github.com/sini/gen-select)   | Selector algebra (consumes product cells via the cell adapter)                                                                                              |
+| **gen-product**                                    | **This lib** — graph products (Cartesian / tensor / strong / lexicographic; cells, slices, fibers, projections, quotients, restriction, containment chains) |
 
 ## Quick Start
 
@@ -150,13 +150,13 @@ show.subset = dims: string;
 
 The generality gen-product buys, documented here and wired in den-hoag:
 
-| den concept | gen-product expression |
-|---|---|
-| user@host scoped config | a **cell** of `hosts × users` |
-| the real fleet | **restrict**(full product, membership relation) — not every user exists on every host |
-| class-share | **quotient** of the host graph by class |
-| matrix instantiation | **cells** enumeration |
-| settings specificity | **containmentChain**, consumed by gen-settings as a layer list |
+| den concept                    | gen-product expression                                                                                    |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| user@host scoped config        | a **cell** of `hosts × users`                                                                             |
+| the real fleet                 | **restrict**(full product, membership relation) — not every user exists on every host                     |
+| class-share                    | **quotient** of the host graph by class                                                                   |
+| matrix instantiation           | **cells** enumeration                                                                                     |
+| settings specificity           | **containmentChain**, consumed by gen-settings as a layer list                                            |
 | specificity lattice as a query | **latticeGraph** — the covering relation of 2^D as dim-labeled adjacency, traversed by den's `node.query` |
 
 ## Testing
