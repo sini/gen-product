@@ -19,16 +19,19 @@
       ...
     }:
     let
-      genProduct = import ../lib {
-        prelude = gen-prelude.lib;
-      };
+      prelude = gen-prelude.lib;
+      genProduct = import ../lib { inherit prelude; };
     in
     gen-harness.lib.mkCi {
       inherit inputs;
       name = "gen-product";
       testModules = ./tests;
+      # `prelude` reaches the suite because `tests/entry.nix` applies the STANDALONE root entry with
+      # explicit arguments — which is what keeps that cell pure, since supplying the formal means the
+      # shim's fetching default is never forced. It is the SAME instance `genProduct` above is built
+      # from, so the two sides of that comparison differ in entry point and in nothing else.
       specialArgs = {
-        inherit genProduct;
+        inherit genProduct prelude;
         graph = gen-graph.lib;
       };
     };
