@@ -5,8 +5,15 @@
 # collapse as a one-liner. `classOf` receives the node's data (the registry entry, per the identity
 # law) and returns a class token (itself an entry); `key` maps the token to a quotient node id.
 #
-# THEORY. Mokhov 2017, *Algebraic Graphs with Class* (§4): `quotient` generalizes the condensation
-# quotient. The quotient map is by construction a STRICT graph homomorphism (loops allowed) — every
+# THEORY. Mokhov 2017, *Algebraic Graphs with Class*, §4.6 *Preorders and Equivalence Relations* —
+# FOR THE CONDENSATION, AND FOR NOTHING ELSE HERE. `condensation` is his word and is measured in that
+# section (2 occurrences), beside the dependency reading this library inherits: "tasks 2 and 3 are
+# executed as a step, simultaneously". `quotient` is NOT his word — it occurs 0 times in the paper —
+# so the generalization from a condensation by strongly-connected component to a quotient by an
+# arbitrary `classOf` is gen-product's own, claimed from no text. The homomorphism reading is not his
+# either: Mokhov's homomorphisms are §5.5, about which newtype wrappers preserve the structure of a
+# graph EXPRESSION, a different subject. The property below is stated as construction, which is all it
+# ever was. The quotient map is by construction a STRICT graph homomorphism (loops allowed) — every
 # input edge u -> v yields a quotient edge [u] -> [v] (soundness), and every quotient edge is witnessed
 # by a member edge (completeness) — the standard quotient-map property. Quotient is a GLOBAL operation:
 # it forces the input's node enumeration, building the member index once.

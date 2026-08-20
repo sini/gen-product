@@ -181,8 +181,14 @@ The library source (`lib/**.nix`) is verified nixpkgs-lib-free by `ci/tests/puri
 - **Kahn, G. 1974 — _The Semantics of a Simple Language for Parallel Programming_** (inherited via
   gen-graph's accessor convention). Demand-driven structure: adjacency accessors force only what a
   traversal visits — the laziness discipline restated for products.
-- **Mokhov, A. 2017 — _Algebraic Graphs with Class_.** `quotient` generalizes the condensation
-  quotient gen-graph already implements; the quotient map is the standard strict homomorphism.
+- **Mokhov, A. 2017 — _Algebraic Graphs with Class_, §4.6 _Preorders and Equivalence Relations_ — for
+  the condensation only.** `condensation` is his word and is measured there (2 occurrences), with the
+  dependency reading — "tasks 2 and 3 are executed as a step, simultaneously" — that this library
+  inherits. `quotient` is **not** his word: it occurs 0 times in the paper, so generalizing from a
+  condensation by strongly-connected component to a quotient by an arbitrary class map is
+  gen-product's own step and is claimed from no text. The strict-homomorphism property (loops allowed)
+  is likewise stated as construction and not as his result — Mokhov's homomorphisms are §5.5, about
+  newtype wrappers preserving the structure of a graph expression.
 - **Davey, B. A. & Priestley, H. A. — _Introduction to Lattices and Order_ (2nd ed., CUP, 2002).** The
   boolean lattice `2^D` and its covering relation / Hasse diagram (§1.2, §2.5): `latticeGraph` exposes
   the cover `S ⋖ S∪{d}` as dim-labeled adjacency — each cover adds one atom (`2^D` is atomistic).

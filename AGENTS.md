@@ -190,8 +190,13 @@ Implements/Informed-by split), restated in per-file `THEORY` comments.
   accessors, inherited via gen-graph's accessor convention; every accessor forces only what a traversal
   visits (`lib/view.nix:14-17`). Documented exceptions: `cells`/`nodes`, the lexicographic trailing
   fan-out, and `quotient`.
-- **Mokhov, A. 2017, *Algebraic Graphs with Class* (§4)** — `quotient` generalizes the condensation
-  quotient; the quotient map is a strict graph homomorphism, loops allowed (`lib/quotient.nix:9-12`).
+- **Mokhov, A. 2017, *Algebraic Graphs with Class*, §4.6 *Preorders and Equivalence Relations*** —
+  **the condensation only**, and the subsection title is quoted beside the number so the coordinate
+  stays checkable. `condensation` is his word (2 occurrences there); `quotient` is **ours** and occurs
+  0 times in the paper, so the step from a condensation by strongly-connected component to a quotient
+  by an arbitrary `classOf` is claimed from no text. The strict-homomorphism property (loops allowed)
+  is stated as construction, not as a Mokhov result — his homomorphisms are §5.5, on newtype wrappers
+  preserving the structure of a graph expression (`lib/quotient.nix` header; `lib/quotient.nix:quotient`).
 - **Davey, B. A. & Priestley, H. A., *Introduction to Lattices and Order* (2nd ed., CUP, 2002),
   §1.2/§2.5** — the boolean lattice `2^D` and its covering relation; `latticeGraph` exposes the cover
   `S ⋖ S∪{d}` as dim-labeled adjacency (`lib/chain.nix:220-228`).
