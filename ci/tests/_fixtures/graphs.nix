@@ -35,8 +35,12 @@ let
       nodeData = id: entries.${id};
     };
     key = entry: entry.id_hash;
-    # attrset access throws on an unknown id_hash — the §2.1 entryOf precondition the default
-    # registry path satisfies (pointwise not-a-node detection depends on it).
+    # attrset access on an unknown id_hash raises an uncaught Nix EvalError ("attribute '<id>'
+    # missing"), NOT a catchable `throw` — `tryEval` does not catch it (MEASURED den-hoag-sq3i), so
+    # pointwise not-a-node detection's own `tryEval (lib/view.nix)` cannot catch it either: this
+    # idiom currently BYPASSES not-a-node detection rather than satisfying its precondition. Pinned
+    # live at ci/tests/identity-errors.nix:test-not-a-node-throwing-entryof. Making the idiom
+    # catchable is a mechanism fix tracked separately (den-hoag-i25f).
     entryOf = id: entries.${id};
   };
 
