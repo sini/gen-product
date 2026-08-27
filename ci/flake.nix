@@ -34,5 +34,8 @@
         inherit genProduct prelude;
         graph = gen-graph.lib;
       };
+      # Cells whose `expr` CAN ABORT go on a second output, outside the `flake.tests` quantifier
+      # `checks.default` forces unconditionally — see `./tests-error.nix`.
+      extraModules = [ ./tests-error.nix ];
     };
 }

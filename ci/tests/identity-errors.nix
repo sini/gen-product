@@ -1,8 +1,10 @@
 # identity-errors (law P15): public inputs are registry entries (or caller-keyed ids via explicit
 # `key`); no public function accepts a "kind:name" string. Every §4.6 addressing error is a
-# definition-time throw. not-a-node detection fixtures: the fixture's naive `entryOf` (uncaught
-# EvalError, den-hoag-sq3i), an explicit-throw `entryOf` control, round-trip-mismatching `entryOf`,
-# and the VACUOUS identity-codec path (a non-node passes `cell`, pinned as documented behaviour).
+# definition-time throw. not-a-node detection fixtures: an explicit-throw `entryOf` control,
+# round-trip-mismatching `entryOf`, and the VACUOUS identity-codec path (a non-node passes `cell`,
+# pinned as documented behaviour). The fixture's naive `entryOf` (uncaught EvalError, den-hoag-sq3i)
+# is pinned separately, on `../tests-error.nix`: its `expr` aborts, and `checks.default` forces every
+# `expr` under this file's `flake.tests` unconditionally, so an aborting cell cannot live here.
 # Entries-in / entries-out audit of the public surface.
 #
 # Note: Nix `tryEval` reports only whether a throw fired, not its text; the messages themselves name
@@ -57,25 +59,10 @@ let
   # missing-dim: partial coords to cell.
   missingDim = fails (gp.cell p { host = hosts.H_axon01; });
 
-  # not-a-node — (b) the fixture's REAL naive idiom (`hf`/`p` above are built from `registryFactor`,
-  # whose `entryOf = id: entries.${id}` — graphs.nix:40) fed an unknown id_hash. MEASURED
-  # (den-hoag-sq3i): a missing dynamic attribute selection is a Nix EvalError, not a `throw` —
-  # `tryEval` does not catch it, so notANode's internal `tryEval (f.entryOf k.value)`
-  # (lib/view.nix:73) cannot catch it either. The not-a-node throw at lib/view.nix:224-228 is never
-  # reached; the raw EvalError propagates uncaught straight through `gp.cell`. This pins the
-  # CURRENTLY MEASURED behaviour — making the idiom catchable is a mechanism fix tracked separately
-  # (den-hoag-i25f).
-  notNodeNaiveUncaught = gp.cell p {
-    host = {
-      id_hash = "ghost";
-      name = "ghost";
-    };
-    user = users.U_sini;
-  };
-
   # not-a-node — (b) control: an entryOf that fails via an EXPLICIT `throw` (a caller-authored
-  # guard, distinct from the naive idiom above) IS caught by the same harness — notANode's tryEval
-  # catches throw/assert, just not a plain missing-attribute selector. Same harness, same run.
+  # guard, distinct from the fixture's naive idiom — see `../tests-error.nix`) IS caught by the
+  # same harness — notANode's tryEval catches throw/assert, just not a plain missing-attribute
+  # selector. Same harness, same run.
   throwEntryOf = {
     dim = "host";
     graph = {
@@ -174,13 +161,8 @@ in
       expr = missingDim;
       expected = true;
     };
-    test-not-a-node-throwing-entryof = {
-      expr = notNodeNaiveUncaught;
-      expectedError = {
-        type = "EvalError";
-        msg = "attribute 'ghost' missing";
-      };
-    };
+    # test-not-a-node-throwing-entryof lives on `../tests-error.nix`: its `expr` aborts, and
+    # `checks.default` forces every `expr` under `flake.tests` unconditionally.
     test-not-a-node-explicit-throw-control = {
       expr = notNodeExplicitThrowControl;
       expected = true;
