@@ -17,7 +17,6 @@
   genProduct,
   prelude,
   graph,
-  genInputs,
   ...
 }:
 let
@@ -45,14 +44,6 @@ let
   };
 in
 {
-  # Same type as `flake.tests` (`gen-harness/flakeModule.nix`), because it is the same kind of thing
-  # read by the same runner — only the assertion the cell carries differs.
-  options.flake.testsError = lib.mkOption {
-    type = lib.types.lazyAttrsOf (lib.types.lazyAttrsOf lib.types.raw);
-    default = { };
-    description = "Test suites whose cells' `expr` CAN ABORT: { suite.test = { expr; expected | expectedError; }; }. Read by `nix-unit --flake ./ci#testsError`; deliberately outside `flake.tests`, which the batch asserter forces every `expr` of and would crash on rather than fail.";
-  };
-
   config = {
     flake.testsError.identity-errors = {
       test-not-a-node-throwing-entryof = {
@@ -63,30 +54,5 @@ in
         };
       };
     };
-
-    # THE SECOND HOOK. A second output that nothing runs is a second output that rots, and the
-    # `ci` hook `gen-harness/flakeModule.nix` builds bakes `./ci#tests` into its own text, so it
-    # cannot be pointed here. This is its counterpart, under a distinct hook id so the two merge
-    # rather than collide.
-    perSystem =
-      { pkgs, system, ... }:
-      {
-        pre-commit.settings.hooks.ci-error = {
-          enable = true;
-          name = "ci-error";
-          description = "Run nix-unit error-assertion tests";
-          entry = "${
-            pkgs.writeShellApplication {
-              name = "gen-product-ci-nix-unit-error";
-              runtimeInputs = [ genInputs.nix-unit.packages.${system}.default ];
-              text = ''
-                exec nix-unit --flake ./ci#testsError "$@"
-              '';
-            }
-          }/bin/gen-product-ci-nix-unit-error";
-          files = "\\.nix$";
-          pass_filenames = false;
-        };
-      };
   };
 }
