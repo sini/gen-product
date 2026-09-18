@@ -156,8 +156,8 @@ coordinates are raw node id **strings** with no `id_hash` at all.
 
 <!-- gen-citations:begin -->
 
-Each row verified in this run at rev `c3b8f14` by evaluating against the flake's `.lib` (`gp`).
-Shared fixtures: `hosts = { H_a; H_b; H_c; }` and `users = { U_s; U_v; }` are gen-schema-shaped entries
+Every row was measured **in this repository**, by evaluating against the flake's `.lib` (`gp`) —
+commands are given so each row is re-runnable rather than trusted. Shared fixtures: `hosts = { H_a; H_b; H_c; }` and `users = { U_s; U_v; }` are gen-schema-shaped entries
 (`id_hash`, `name`); `hostF` / `userF` are registry factor specs (`key = e: e.id_hash`,
 `entryOf = id: entries.${id}`) with one host edge `H_a → H_b`; `pg = gp.productN "cartesian" [ hostF userF ]`;
 `cid = gp.cell pg { host = hosts.H_a; user = users.U_s; }`; `sl = gp.slice pg { host = hosts.H_a; }`;
