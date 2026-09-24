@@ -24,10 +24,8 @@ let
     all
     unique
     tail
-    imap0
-    range
-    length
     listToAttrs
+    dedupByKey
     ;
   inherit (builtins) toJSON fromJSON;
 
@@ -94,29 +92,15 @@ let
       concatMap (partial: map (e: partial // { ${d} = e; }) entries) acc
     ) [ { } ] def.dims;
 
-  # First-seen deduplication by cellId, applying the codec ONCE per element. `listToAttrs` keeps the
-  # FIRST binding for a repeated name, so `firstAt` maps each key to the index of its first
-  # occurrence and "x is the first of its key" becomes an index comparison instead of a rescan of
-  # everything already accepted. Given order is preserved by construction — survivors are selected
-  # from the index range in order (B5 discipline, no silent reorder) — and `range 0 (-1)` is [ ], so
-  # the empty list is total rather than accidental.
+  # First-seen deduplication by cellId, given order preserved (B5 discipline, no silent reorder):
+  # gen-prelude's `dedupByKey`, the linear key→first-index table, keyed by the cell codec.
   #
-  # Specialized on `def` rather than parametric in a `keyFn`: an index needs its keys to be attribute
+  # Specialized on `def` rather than parametric in a `keyFn`: the index needs its keys to be attribute
   # names, and applying `fullCellId def` here makes that string codomain a type fact of the codec
   # (`toJSON` of the key tuple) instead of a caller precondition whose violation is a bare
-  # `listToAttrs` type abort.
-  firstSeenById =
-    def: xs:
-    let
-      keys = map (fullCellId def) xs;
-      firstAt = listToAttrs (
-        imap0 (i: k: {
-          name = k;
-          value = i;
-        }) keys
-      );
-    in
-    map (i: elemAt xs i) (filter (i: firstAt.${elemAt keys i} == i) (range 0 (length xs - 1)));
+  # `listToAttrs` type abort. The codec never yields `null`, so `dedupByKey`'s keep-every-null-key
+  # arm is unreachable from here.
+  firstSeenById = def: dedupByKey (fullCellId def);
 
   relationsCoverAll =
     def: restriction:

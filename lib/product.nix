@@ -19,10 +19,8 @@ let
     filter
     length
     listToAttrs
-    head
-    tail
     ;
-  inherit (factor) normalizeFactors;
+  inherit (factor) normalizeFactors firstDuplicate;
   inherit (view) mkView enumerationOf;
 
   validKinds = [
@@ -31,20 +29,6 @@ let
     "strong"
     "lexicographic"
   ];
-
-  firstDuplicate =
-    xs:
-    let
-      go =
-        seen: rest:
-        if rest == [ ] then
-          null
-        else if elem (head rest) seen then
-          head rest
-        else
-          go (seen ++ [ (head rest) ]) (tail rest);
-    in
-    go [ ] xs;
 
   productN =
     kind: rawFactors:

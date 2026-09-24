@@ -15,7 +15,14 @@ let
   view = import ./view.nix { inherit prelude adjacency membership; };
   product = import ./product.nix { inherit prelude factor view; };
   quotient = import ./quotient.nix { inherit prelude; };
-  chain = import ./chain.nix { inherit prelude view; };
+  chain = import ./chain.nix {
+    inherit
+      prelude
+      view
+      factor
+      show
+      ;
+  };
   show = import ./show.nix { inherit prelude; };
 
   inherit (view) mkView sliceView enumerationOf;

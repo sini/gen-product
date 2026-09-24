@@ -19,13 +19,14 @@
 {
   prelude,
   view,
+  factor,
+  show,
 }:
 let
   inherit (prelude)
     map
     filter
     elem
-    elemAt
     length
     foldl'
     concatMap
@@ -36,8 +37,11 @@ let
     imap0
     concatStringsSep
     unique
+    indexOf
     ;
   inherit (builtins) isFunction;
+  inherit (factor) firstDuplicate;
+  showSubset = show.show.subset;
 
   # Powerset, deterministic order (not load-bearing — the linearization re-sorts).
   subsets =
@@ -71,8 +75,6 @@ let
         lexLt (tail a) (tail b);
 
   sortDesc = xs: sort (a: b: a > b) xs;
-
-  indexOf = xs: v: head (filter (i: elemAt xs i == v) (imap0 (i: _: i) xs));
 
   properSubset = a: b: a != b && builtins.all (x: elem x b) a;
 
@@ -118,20 +120,6 @@ let
       throw "gen-product: duplicate-rank — dims ${concatStringsSep ", " collide.dims} share rank ${toString collide.rank}"
     else
       null;
-
-  firstDuplicate =
-    xs:
-    let
-      go =
-        seen: rest:
-        if rest == [ ] then
-          null
-        else if elem (head rest) seen then
-          head rest
-        else
-          go (seen ++ [ (head rest) ]) (tail rest);
-    in
-    go [ ] xs;
 
   firstRankCollision =
     D: rankOf:
@@ -214,8 +202,6 @@ let
         inherit rank;
       }) sortedSubs
     );
-
-  showSubset = dims: "{" + concatStringsSep "," dims + "}";
 
   # latticeGraph (feature #2) — the boolean lattice 2^D exposed as its COVERING relation (Hasse diagram):
   # the transitive reduction of subset inclusion, S ⋖ S∪{d} for each d ∈ D\S (Davey & Priestley,

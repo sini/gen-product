@@ -2,6 +2,8 @@
 #
 # Not a rendering API. den-hoag owns user-facing rendering ("sini@axon-01"); gen-product renders just
 # enough to name the offending dimension and value in a throw (strings are display only, never data).
+# One exception, stated: `subset` is also the node id of `latticeGraph` (lib/chain.nix), which takes
+# it from here, so a refusal naming a subset and the lattice node for it cannot drift apart.
 { prelude }:
 let
   inherit (prelude) map concatStringsSep attrNames;

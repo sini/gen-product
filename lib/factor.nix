@@ -16,7 +16,13 @@
 # generic-graph callers.
 { prelude }:
 let
-  inherit (prelude) imap0 map;
+  inherit (prelude)
+    imap0
+    map
+    elem
+    head
+    tail
+    ;
   inherit (builtins) toString;
 
   # A value is a factor spec iff it carries a `graph` field; a bare accessor-graph never does
@@ -40,7 +46,24 @@ let
       };
 
   normalizeFactors = factors: imap0 normalizeFactor factors;
+
+  # The first element of `xs` that repeats an earlier one (structural ==), else null. The ONE
+  # definition behind both dimension-name refusals: `productN`'s duplicate-dim and
+  # `linearizeByDimOrder`'s duplicate-dim-order. gen-prelude exports no equivalent.
+  firstDuplicate =
+    xs:
+    let
+      go =
+        seen: rest:
+        if rest == [ ] then
+          null
+        else if elem (head rest) seen then
+          head rest
+        else
+          go (seen ++ [ (head rest) ]) (tail rest);
+    in
+    go [ ] xs;
 in
 {
-  inherit normalizeFactor normalizeFactors;
+  inherit normalizeFactor normalizeFactors firstDuplicate;
 }
