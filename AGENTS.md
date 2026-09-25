@@ -68,12 +68,12 @@ transcribed — which is why the `follows` rule is declared exactly once in this
 
 **Sub-structures** — `lib/default.nix`, over `lib/view.nix`
 
-| Export      | Signature                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------- |
-| `slice`     | `<pgraph> -> partialCoords -> <pgraph>` (fixes a subset of the free dims; base accumulates) |
-| `fiber`     | `<pgraph> -> dim -> entry -> <pgraph>` (sugar: `slice pg { ${dim} = entry; }`)              |
-| `projectTo` | `<pgraph> -> dim -> factorGraph // { projection = { dim; ofCell; ofCoords; }; }`            |
-| `restrict`  | `<pgraph> -> membership -> <pgraph>`; `restrict ∘ restrict` conjoins                        |
+| Export      | Signature                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slice`     | `<pgraph> -> partialCoords -> <pgraph>` (fixes a subset of the free dims; base accumulates; validating: unknown-dim / not-a-node, as `cell`) |
+| `fiber`     | `<pgraph> -> dim -> entry -> <pgraph>` (sugar: `slice pg { ${dim} = entry; }`)                                                               |
+| `projectTo` | `<pgraph> -> dim -> factorGraph // { projection = { dim; ofCell; ofCoords; }; }`                                                             |
+| `restrict`  | `<pgraph> -> membership -> <pgraph>`; `restrict ∘ restrict` conjoins                                                                         |
 
 **Quotient** — `lib/quotient.nix`
 

@@ -89,6 +89,12 @@ let
         in
         if !rt.success then true else rt.value != k.value;
 
+  # The ONE not-a-node refusal, shared by `cell` and `sliceView`: `d` is the first dim, in declared
+  # order, whose coordinate in `coords` `notANode` rejects.
+  refuseNotANode =
+    def: d: coords:
+    throw "gen-product: not-a-node in dim '${d}' — ${renderEntry def.factorsByDim.${d} coords.${d}}";
+
   # `enumeration` is REQUIRED and never defaulted. The member set does not depend on `base`, so every
   # view over one (def, restriction) shares it — but a defaulted `enumeration ? enumerationOf def
   # restriction` would let a constructor that already holds the value silently re-derive it, which is
@@ -231,10 +237,7 @@ let
         else if missing != [ ] then
           throw "gen-product: missing-dim — cell requires coordinates for: ${concatStringsSep ", " missing}"
         else if badNode != [ ] then
-          let
-            d = head badNode;
-          in
-          throw "gen-product: not-a-node in dim '${d}' — ${renderEntry def.factorsByDim.${d} coords.${d}}"
+          refuseNotANode def (head badNode) coords
         else if restriction != null && !(isMember def restriction (base // coords)) then
           throw "gen-product: not-a-member — ${showCoords (base // coords)} is outside this restricted product"
         else
@@ -276,12 +279,18 @@ let
     };
 
   # Slice a pgraph: fix a subset of its FREE dimensions. Validates that each named dim is free
-  # (naming a fixed dim is an unknown-dim error); base accumulates so slices compose.
+  # (naming a fixed dim is an unknown-dim error) and that each fixed coordinate is a node of its own
+  # factor (the same pointwise `notANode` door as `cell`, so a stale coordinate is refused by name
+  # rather than read as an empty fiber); base accumulates so slices compose, and a composed slice
+  # checks only the coordinates it adds, the parent's having passed at its own construction.
   sliceView =
     pg: partialCoords:
     let
       freeDims = pg.__freeDims;
       unknown = filter (d: !(elem d freeDims)) (attrNames partialCoords);
+      badNode = filter (
+        d: builtins.hasAttr d partialCoords && notANode pg.__def.factorsByDim.${d} partialCoords.${d}
+      ) freeDims;
     in
     if unknown != [ ] then
       let
@@ -290,6 +299,8 @@ let
           if builtins.hasAttr d pg.__base then " (dimension '${d}' is fixed in this slice)" else "";
       in
       throw "gen-product: unknown-dim '${d}'${fixedNote} — declared (free) dims: ${concatStringsSep ", " freeDims}"
+    else if badNode != [ ] then
+      refuseNotANode pg.__def (head badNode) partialCoords
     else
       mkView {
         def = pg.__def;

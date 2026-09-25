@@ -123,6 +123,43 @@ in
         "[1,\"U_vic\"]"
       ];
     };
+    # slice/fiber (den-hoag-qfcs3): a fixed coordinate passes the same not-a-node door as `cell`,
+    # so a non-node is a CATCHABLE refusal (named on `../tests-error.nix`, `slice-doors`), never an
+    # empty fiber at rc 0. Controls: a real node's fiber and slice, and an integer-id fiber.
+    test-fiber-non-node-is-catchable = {
+      expr = !(builtins.tryEval (builtins.deepSeq (gp.fiber pDefault "host" ghost).nodes true)).success;
+      expected = true;
+    };
+    test-slice-non-node-is-catchable = {
+      expr =
+        !(builtins.tryEval (
+          builtins.deepSeq
+            (gp.slice pDefault {
+              host = hosts.H_axon01;
+              user = ghost;
+            }).nodes
+            true
+        )).success;
+      expected = true;
+    };
+    test-fiber-real-node = {
+      expr = (gp.fiber pDefault "host" hosts.H_axon01).nodes;
+      expected = [
+        "[\"U_sini\"]"
+        "[\"U_vic\"]"
+      ];
+    };
+    test-slice-real-nodes = {
+      expr = (gp.slice pDefault good).nodes;
+      expected = [ "[]" ];
+    };
+    test-int-node-id-fiber = {
+      expr = (gp.fiber pInt "host" (builtins.elemAt ints 1)).nodes;
+      expected = [
+        "[\"U_sini\"]"
+        "[\"U_vic\"]"
+      ];
+    };
     test-int-bare-accessor-addresses = {
       expr = gp.cell pBareInt {
         "0" = 1;

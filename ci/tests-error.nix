@@ -205,6 +205,28 @@ in
         };
       };
     };
+    # slice/fiber (den-hoag-qfcs3): a fixed coordinate that is not a node of its factor is refused by
+    # the same named door as `cell`, naming the first offending dim in declared order.
+    flake.testsError.slice-doors = {
+      test-fiber-non-node-refused-by-name = {
+        expr = (gp.fiber pDefault "host" ghostHost.host).nodes;
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product: not-a-node in dim 'host' — ghost";
+        };
+      };
+      test-slice-non-node-refused-by-name = {
+        expr =
+          (gp.slice pDefault {
+            host = hosts.H_axon01;
+            user = ghostHost.host;
+          }).nodes;
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product: not-a-node in dim 'user' — ghost";
+        };
+      };
+    };
     flake.testsError.malformed-membership = {
       test-malformed-pair = {
         expr = malformedPair;
