@@ -252,9 +252,104 @@ let
     accepted = map x.oracle sqCoords;
     members = sortedIds (lib.filter x.oracle sqCoords);
   };
+
+  # malformed membership: a pair / cell lacking a dim. `good` is a member, `bad` lacks `user`.
+  good = {
+    host = hosts.H_axon01;
+    user = users.U_sini;
+  };
+  bad = {
+    host = hosts.H_axon02;
+  };
+  malRel =
+    pairs:
+    gp.restrict p {
+      relations = [
+        {
+          dims = [
+            "host"
+            "user"
+          ];
+          inherit pairs;
+        }
+      ];
+    };
+  caught = v: (builtins.tryEval (builtins.deepSeq v v)).success;
 in
 {
   flake.tests.restrict-membership = {
+    # A malformed pair or cell is a catchable refusal on every path that reads it, in both pair
+    # orders; the named message is pinned in `ci/tests-error.nix`. `false` = tryEval caught it.
+    test-malformed-membership-catchable = {
+      expr = {
+        malformedFirst = caught (
+          gp.cell (malRel [
+            bad
+            good
+          ]) good
+        );
+        malformedAfterMatch = caught (
+          gp.cell (malRel [
+            good
+            bad
+          ]) good
+        );
+        nonMember = caught (
+          gp.cell (malRel [
+            good
+            bad
+          ]) (good // { user = users.U_vic; })
+        );
+        enumeration = caught (
+          gp.cells (malRel [
+            good
+            bad
+          ])
+        );
+        cells = caught (
+          gp.cell (gp.restrict p {
+            cells = [
+              good
+              bad
+            ];
+          }) good
+        );
+        # the relation record itself: a missing `pairs`, an undeclared dim.
+        relationShape = caught (gp.cells (gp.restrict p { relations = [ { dims = [ "host" ]; } ]; }));
+        undeclaredDim = caught (
+          gp.cells (
+            gp.restrict p {
+              relations = [
+                {
+                  dims = [ "rack" ];
+                  pairs = [ { rack = "r0"; } ];
+                }
+              ];
+            }
+          )
+        );
+      };
+      expected = {
+        malformedFirst = false;
+        malformedAfterMatch = false;
+        nonMember = false;
+        enumeration = false;
+        cells = false;
+        relationShape = false;
+        undeclaredDim = false;
+      };
+    };
+    # the check fires when an element is forced, not when the restriction is built.
+    test-malformed-membership-lazy = {
+      expr = [
+        (builtins.isAttrs (malRel (throw "pairs forced")))
+        (builtins.isAttrs (gp.restrict p { cells = throw "cells forced"; }))
+      ];
+      expected = [
+        true
+        true
+      ];
+    };
     test-clause1-cells = {
       expr = lib.length (gp.cells byCells);
       expected = 2;

@@ -27,6 +27,10 @@ let
     listToAttrs
     imap0
     dedupByKey
+    isAttrs
+    attrNames
+    concatStringsSep
+    head
     ;
   inherit (builtins) toJSON fromJSON;
 
@@ -61,6 +65,43 @@ let
       }) relation.pairs
     );
 
+  # The malformed-membership door (ADR-0025 item 1). A pair or cell lacking a dim its key reads would
+  # otherwise abort as a bare `attribute '<d>' missing`, which `tryEval` cannot catch. Every reader of
+  # a record's elements — both index thunks, the join, strategy 1 — reads the normalized lists, so the
+  # check sits on their ELEMENTS: it fires when an element is forced and not before, so a restriction
+  # whose pairs or cells are never probed still constructs.
+  requireDims =
+    where: dims: x:
+    let
+      missing = filter (d: !(isAttrs x && x ? ${d})) dims;
+      has = if isAttrs x then concatStringsSep ", " (attrNames x) else builtins.typeOf x;
+    in
+    if missing == [ ] then
+      x
+    else
+      throw "gen-product: malformed-membership — ${where} lacks dim '${head missing}' (has: ${has})";
+
+  checkRelation =
+    def: i: r:
+    let
+      where = "relations[${toString i}]";
+    in
+    if !(isAttrs r && r ? dims && r ? pairs) then
+      throw "gen-product: malformed-membership — ${where} must have `dims` and `pairs`"
+    else
+      let
+        unknown = filter (d: !(elem d def.dims)) r.dims;
+      in
+      if unknown != [ ] then
+        throw "gen-product: malformed-membership — ${where} names undeclared dim '${head unknown}'"
+      else
+        r
+        // {
+          pairs = imap0 (
+            j: requireDims "${where} (dims ${concatStringsSep ", " r.dims}) pair ${toString j}" r.dims
+          ) r.pairs;
+        };
+
   # The normalized record carries its own membership indexes (ADR-0012 clause 2: a derived view's
   # materialized result may be a field of the record it is derived from). They are derived here, where
   # the record is built, so every `isMember` caller reads the same index whatever its application
@@ -69,8 +110,10 @@ let
   normalizeMembership =
     def: m:
     let
-      cells = m.cells or null;
-      relations = m.relations or [ ];
+      rawCells = m.cells or null;
+      cells =
+        if rawCells == null then null else imap0 (i: requireDims "cells[${toString i}]" def.dims) rawCells;
+      relations = imap0 (checkRelation def) (m.relations or [ ]);
     in
     {
       inherit cells relations;

@@ -42,6 +42,36 @@ let
     };
     user = users.U_sini;
   };
+
+  # malformed-membership — a relation pair lacking a dim of its relation, and a cell lacking a dim of
+  # the product. Catchability (tryEval, both pair orders) is `ci/tests/restrict-membership.nix`.
+  good = {
+    host = hosts.H_axon01;
+    user = users.U_sini;
+  };
+  bad = {
+    host = hosts.H_axon02;
+  };
+  malformedPair = gp.cell (gp.restrict p {
+    relations = [
+      {
+        dims = [
+          "host"
+          "user"
+        ];
+        pairs = [
+          good
+          bad
+        ];
+      }
+    ];
+  }) good;
+  malformedCell = gp.cell (gp.restrict p {
+    cells = [
+      good
+      bad
+    ];
+  }) good;
 in
 {
   config = {
@@ -51,6 +81,22 @@ in
         expectedError = {
           type = "EvalError";
           msg = "attribute 'ghost' missing";
+        };
+      };
+    };
+    flake.testsError.malformed-membership = {
+      test-malformed-pair = {
+        expr = malformedPair;
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product: malformed-membership — relations\\[0\\] \\(dims host, user\\) pair 1 lacks dim 'user' \\(has: host\\)";
+        };
+      };
+      test-malformed-cell = {
+        expr = malformedCell;
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product: malformed-membership — cells\\[1\\] lacks dim 'user' \\(has: host\\)";
         };
       };
     };
