@@ -105,7 +105,9 @@ in genProduct.cartesian hostFactor userFactor
   enumeration, not H. A view takes that set as a required argument, so the sharing is a property of the
   construction rather than a cache consulted when present. `restrict` derives a new one, because changing
   the restriction changes the set. Slicing that shared set is a **fiber lookup** on the fixed dimension,
-  and the relational join indexes its probe side, so neither is a scan.
+  and the relational join indexes its probe side, so neither is a scan. The point membership test is
+  likewise a lookup: the normalized restriction carries its own cellId-keyed index as a field, built
+  once per restriction rather than re-derived per probe.
 - **Identity at the boundary.** Coordinates are **registry entries** keyed by dimension name; cellIds
   are opaque internal keys (canonical `builtins.toJSON` of the ordered factor node ids). No public
   function takes or returns a `"kind:name"` string.

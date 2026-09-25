@@ -140,6 +140,118 @@ let
       } # duplicate
     ];
   };
+
+  # ── the membership index (den-hoag-bksu) ──
+  # An index's shape: attrset-ness and its distinct-key count. A key LIST (the rescan's shape) reads
+  # isAttrs = false, keys = -1.
+  shapeOf = i: {
+    isAttrs = builtins.isAttrs i;
+    keys = if builtins.isAttrs i then lib.length (builtins.attrNames i) else -1;
+  };
+  keysOf = i: builtins.attrNames i;
+  cid =
+    h: u:
+    builtins.toJSON [
+      h
+      u
+    ];
+
+  # restrict ∘ restrict over two cells clauses (class member 3, `conjoin`) and over two relations.
+  conjCells = gp.restrict byCells {
+    cells = [
+      {
+        host = hosts.H_axon01;
+        user = users.U_sini;
+      }
+    ];
+  };
+  conjRels = gp.restrict byRel {
+    relations = [
+      {
+        dims = [ "user" ];
+        pairs = [ { user = users.U_sini; } ];
+      }
+    ];
+  };
+
+  # Parity fixture: an 8×8 edgeless identity-codec product with hit and miss coordinates for every
+  # clause shape. The expected answers come from a brute-force oracle over the raw membership data
+  # (`lib.elem` on the declared lists), independent of the library's index.
+  sqF =
+    n:
+    idFactor n {
+      nodes = map (i: "${n}${toString i}") (lib.range 0 7);
+      edges = _: [ ];
+      parent = _: null;
+      nodeData = id: id;
+    };
+  sq = gp.productN "cartesian" [
+    (sqF "a")
+    (sqF "b")
+  ];
+  at = i: j: {
+    a = "a${toString i}";
+    b = "b${toString j}";
+  };
+  sqCoords = lib.concatMap (i: map (at i) (lib.range 0 7)) (lib.range 0 7);
+  diag = map (i: at i i) [
+    0
+    2
+    4
+    6
+  ];
+  anti = map (i: at i (7 - i)) (lib.range 0 4);
+  sqCells = gp.restrict sq { cells = diag; };
+  sqRel = gp.restrict sq {
+    relations = [
+      {
+        dims = [
+          "a"
+          "b"
+        ];
+        pairs = anti;
+      }
+    ];
+  };
+  narrowCells = [
+    (at 2 2)
+    (at 3 3)
+    (at 4 4)
+  ];
+  narrowRel = [
+    (at 1 6)
+    (at 5 5)
+    (at 2 5)
+  ];
+  sqConjCells = gp.restrict sqCells { cells = narrowCells; };
+  sqConjRelCells = gp.restrict sqRel { cells = narrowRel; };
+  parity = [
+    {
+      r = sqCells;
+      oracle = c: lib.elem c diag;
+    }
+    {
+      r = sqRel;
+      oracle = c: lib.elem c anti;
+    }
+    {
+      r = sqConjCells;
+      oracle = c: lib.elem c diag && lib.elem c narrowCells;
+    }
+    {
+      r = sqConjRelCells;
+      oracle = c: lib.elem c anti && lib.elem c narrowRel;
+    }
+  ];
+  sortedIds = cs: lib.sort lib.lessThan (map sq.product.cellOf cs);
+  answersOf = x: {
+    accepted = map (c: (builtins.tryEval (gp.cell x.r c)).success) sqCoords;
+    members = sortedIds (gp.cells x.r);
+  };
+  oracleOf = x: {
+    accepted = map x.oracle sqCoords;
+    members = sortedIds (lib.filter x.oracle sqCoords);
+  };
 in
 {
   flake.tests.restrict-membership = {
@@ -226,6 +338,86 @@ in
     test-cell-non-member-errors = {
       expr = nonMember.success;
       expected = false;
+    };
+    # The membership index is a materialized attrset field of the normalized restriction record, one
+    # attribute per DISTINCT key (`ordered` lists a cell twice) — not a key list scanned per probe.
+    test-membership-index-is-an-attrset = {
+      expr = {
+        cells = shapeOf ordered.product.restriction.cellIndex;
+        relations = map shapeOf byRel.product.restriction.relationIndexes;
+        cellsLess = byRel.product.restriction.cellIndex;
+      };
+      expected = {
+        cells = {
+          isAttrs = true;
+          keys = 2;
+        };
+        relations = [
+          {
+            isAttrs = true;
+            keys = 2;
+          }
+        ];
+        cellsLess = null;
+      };
+    };
+    # Index answers equal the scan's: acceptance by `cell` over all 64 coordinates and the member set,
+    # per clause shape, against the brute-force oracle. The hit counts pin that every shape has both
+    # hits and misses.
+    test-index-answers-agree-with-scan = {
+      expr = {
+        identical = map (x: answersOf x == oracleOf x) parity;
+        hits = map (x: lib.length (lib.filter (b: b) (answersOf x).accepted)) parity;
+      };
+      expected = {
+        identical = [
+          true
+          true
+          true
+          true
+        ];
+        hits = [
+          4
+          5
+          2
+          2
+        ];
+      };
+    };
+    # One sub-assertion per class member, each on a restriction that forces exactly that clause:
+    # relationMatch (relations), isMember c1 (cells), conjoin (restrict ∘ restrict, which carries both
+    # operands' indexes rather than re-deriving them).
+    test-index-covers-all-three-class-members = {
+      expr = {
+        relationMatch = map keysOf byRel.product.restriction.relationIndexes;
+        c1 = keysOf byCells.product.restriction.cellIndex;
+        conjoin = {
+          cellIndex = keysOf conjCells.product.restriction.cellIndex;
+          relationIndexes = map keysOf conjRels.product.restriction.relationIndexes;
+        };
+      };
+      expected = {
+        relationMatch = [
+          [
+            (cid "H_axon01" "U_sini")
+            (cid "H_axon02" "U_vic")
+          ]
+        ];
+        c1 = [
+          (cid "H_axon01" "U_sini")
+          (cid "H_blade01" "U_vic")
+        ];
+        conjoin = {
+          cellIndex = [ (cid "H_axon01" "U_sini") ];
+          relationIndexes = [
+            [
+              (cid "H_axon01" "U_sini")
+              (cid "H_axon02" "U_vic")
+            ]
+            [ (builtins.toJSON [ "U_sini" ]) ]
+          ];
+        };
+      };
     };
   };
 }

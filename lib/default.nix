@@ -65,7 +65,7 @@ let
   restrict =
     pg: rawMembership:
     let
-      m = normalizeMembership rawMembership;
+      m = normalizeMembership pg.__def rawMembership;
       r = pg.__restriction;
       combined = if r == null then m else conjoin pg.__def r m;
     in

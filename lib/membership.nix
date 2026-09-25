@@ -25,6 +25,7 @@ let
     unique
     tail
     listToAttrs
+    imap0
     dedupByKey
     ;
   inherit (builtins) toJSON fromJSON;
@@ -36,19 +37,51 @@ let
 
   fullCellId = def: coords: toJSON (keyTuple def def.dims coords);
 
-  normalizeMembership = m: {
-    cells = m.cells or null;
-    relations = m.relations or [ ];
-    predicate = m.predicate or (_: true);
-  };
+  # A membership index is an attrset keyed by the cellId codec, so a probe is one attribute lookup
+  # instead of a scan of a key list re-derived per probe. The value is `true` — presence is the whole
+  # datum. `null` when there is no cells clause, so the `== null` short-circuit guards the lookup.
+  indexOfCells =
+    def: cs:
+    if cs == null then
+      null
+    else
+      listToAttrs (
+        map (c: {
+          name = fullCellId def c;
+          value = true;
+        }) cs
+      );
+
+  indexOfRelation =
+    def: relation:
+    listToAttrs (
+      map (p: {
+        name = toJSON (keyTuple def relation.dims p);
+        value = true;
+      }) relation.pairs
+    );
+
+  # The normalized record carries its own membership indexes (ADR-0012 clause 2: a derived view's
+  # materialized result may be a field of the record it is derived from). They are derived here, where
+  # the record is built, so every `isMember` caller reads the same index whatever its application
+  # shape. Both are thunks: an unprobed restriction builds no index, a cells-less one no cell index.
+  # `relationIndexes` is parallel to `relations`.
+  normalizeMembership =
+    def: m:
+    let
+      cells = m.cells or null;
+      relations = m.relations or [ ];
+    in
+    {
+      inherit cells relations;
+      predicate = m.predicate or (_: true);
+      cellIndex = indexOfCells def cells;
+      relationIndexes = map (indexOfRelation def) relations;
+    };
 
   relationMatch =
-    def: relation: coords:
-    let
-      projd = toJSON (keyTuple def relation.dims coords);
-      pairKeys = map (p: toJSON (keyTuple def relation.dims p)) relation.pairs;
-    in
-    elem projd pairKeys;
+    def: relation: index: coords:
+    index ? ${toJSON (keyTuple def relation.dims coords)};
 
   # Point test — the strategy-free membership oracle used on the adjacency path (never enumerates).
   isMember =
@@ -57,9 +90,12 @@ let
       true
     else
       let
-        c1 =
-          restriction.cells == null || elem (fullCellId def coords) (map (fullCellId def) restriction.cells);
-        c2 = all (r: relationMatch def r coords) restriction.relations;
+        c1 = restriction.cellIndex == null || restriction.cellIndex ? ${fullCellId def coords};
+        c2 = all (x: x) (
+          imap0 (
+            i: r: relationMatch def r (elemAt restriction.relationIndexes i) coords
+          ) restriction.relations
+        );
         c3 = restriction.predicate coords;
       in
       c1 && c2 && c3;
@@ -67,15 +103,19 @@ let
   # Conjoin two normalized restrictions (restrict∘restrict — the induced-subgraph intersection). The
   # combined record stays cells/relations-shaped so enumeration keeps its hints; both cells clauses
   # are additionally re-checked in the predicate so no member escapes either constraint.
+  # Both operands are normalized records, so their indexes are already fields: the combined record
+  # reuses them rather than re-deriving.
   conjoin = def: r: m: {
     cells = if m.cells != null then m.cells else r.cells;
+    cellIndex = if m.cells != null then m.cellIndex else r.cellIndex;
     relations = r.relations ++ m.relations;
+    relationIndexes = r.relationIndexes ++ m.relationIndexes;
     predicate =
       c:
       r.predicate c
       && m.predicate c
-      && (r.cells == null || elem (fullCellId def c) (map (fullCellId def) r.cells))
-      && (m.cells == null || elem (fullCellId def c) (map (fullCellId def) m.cells));
+      && (r.cellIndex == null || r.cellIndex ? ${fullCellId def c})
+      && (m.cellIndex == null || m.cellIndex ? ${fullCellId def c});
   };
 
   # Full row-major lattice enumeration: declared factor order, last dimension varying fastest, each
