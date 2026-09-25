@@ -167,9 +167,14 @@ Law-based suites under `ci/`, one named test group per law, plus goldens and a b
 oracle recomputed independently of the library. gen-graph's `mkGraph` is a test-only dev input.
 
 ```bash
-cd ci && nix-unit --flake .#tests        # run everything
-nix-unit --flake .#tests.adjacency-lex   # a single suite
+nix develop ./ci --command ci                 # run everything, guarded
+nix develop ./ci --command ci adjacency-lex   # a single suite, guarded
 ```
+
+`ci` refuses when anything under a declared read root is unknown to git — any extension or name,
+`_`-prefixed included — and the remedy is `git add` or a move. The bare `nix-unit --flake ./ci#tests`
+and `nix flake check ./ci` are unguarded: they read a git-filtered copy of the tree, so an untracked
+cell is silently absent and the run stays green.
 
 The library source (`lib/**.nix`) is verified nixpkgs-lib-free by `ci/tests/purity.nix`.
 

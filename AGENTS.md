@@ -26,7 +26,7 @@ Quoted text is the owner's own `flake.nix` `description` field, verbatim.
 | General utilities (gen-product's only dependency)                                            | `gen-prelude` — "gen-prelude: vendored, nixpkgs-lib-free pure utilities for the gen ecosystem"; `gen/lib/mkGenLibs.nix:24-26` records the deps as `product: prelude`                                                                                  |
 | Emitting membership records from policy                                                      | den-hoag, per `lib/membership.nix:4-5` ("emitting membership from policies is den-hoag wiring, never this library's concern"). No gen-\* `description` claims it — UNKNOWN whether a gen library owns any part                                        |
 | User-facing rendering of a cell (`"sini@axon-01"`)                                           | den-hoag, per `lib/show.nix:3-4`; `show.*` renders only enough to name the offending dimension and value in a throw                                                                                                                                   |
-| Prime factorization, cancellation, recognition (Sabidussi–Vizing)                            | No owner — explicit non-goal (`README.md:178-179`, `lib/default.nix:7-8`)                                                                                                                                                                             |
+| Prime factorization, cancellation, recognition (Sabidussi–Vizing)                            | No owner — explicit non-goal (`README.md:186-187`, `lib/default.nix:7-8`)                                                                                                                                                                             |
 
 No sibling gen library is named on a non-comment line of `lib/` — the only `import`s there are the
 eight sibling files of `lib/` itself:
@@ -198,7 +198,7 @@ commands are given so each row is re-runnable rather than trusted. Shared fixtur
 
 ## Theory
 
-Claimed in `README.md:173-187` under a single **Theoretical Foundations** heading (no
+Claimed in `README.md:181-201` under a single **Theoretical Foundations** heading (no
 Implements/Informed-by split), restated in per-file `THEORY` comments.
 
 - **Hammack, Imrich & Klavžar, *Handbook of Product Graphs* (2nd ed., CRC Press, 2011), Part I** — the
@@ -224,7 +224,7 @@ Implements/Informed-by split), restated in per-file `THEORY` comments.
   public coordinates are gen-schema entries and no public function takes a `"kind:name"` string
   (`lib/factor.nix:4-10`).
 
-**Explicitly not realized** (`README.md:178-179`, `lib/default.nix:7-8`): prime factorization,
+**Explicitly not realized** (`README.md:186-187`, `lib/default.nix:7-8`): prime factorization,
 cancellation, and recognition theory — "we build products; we never decompose."
 
 **Checked invariant**: the library is nixpkgs-lib-free and depends on gen-prelude alone, enforced by
@@ -248,5 +248,12 @@ Current output (verbatim):
 `working-directory: ci`, `.github/workflows/ci.yml:13,18`):
 
 ```sh
-nix flake check ./ci
+nix develop ./ci --command ci                # the suites, guarded
+nix develop ./ci --command ci --tests-error  # the error-plane cells, guarded
+nix flake check ./ci                         # what CI runs; unguarded
 ```
+
+Run the suites locally through `ci`: it refuses when anything under a declared read root is
+unknown to git — any extension or name, `_`-prefixed included — and the remedy is `git add` or a
+move. The bare `nix flake check ./ci` and `nix-unit --flake ./ci#tests` are unguarded: they read a
+git-filtered copy of the tree, so an untracked cell is silently absent and the run stays green.
