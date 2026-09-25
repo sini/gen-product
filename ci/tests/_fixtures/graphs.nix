@@ -39,9 +39,20 @@ let
     # missing"), NOT a catchable `throw` — `tryEval` does not catch it (MEASURED den-hoag-sq3i), so
     # pointwise not-a-node detection's own `tryEval (lib/view.nix)` cannot catch it either: this
     # idiom currently BYPASSES not-a-node detection rather than satisfying its precondition. Pinned
-    # live at ci/tests/identity-errors.nix:test-not-a-node-throwing-entryof. Making the idiom
-    # catchable is a mechanism fix tracked separately (den-hoag-i25f).
+    # live at ci/tests-error.nix:test-not-a-node-throwing-entryof. It stays uncatchable: an abort
+    # inside a caller's function body is outside what gen-product can observe, so the factor-spec
+    # contract is return-or-throw (README, "Factor-spec contract"; den-hoag-i25f).
     entryOf = id: entries.${id};
+  };
+
+  # ── default-codec factor (no `key`/`entryOf`: gen-product's own defaults) over gen-graph's
+  # `fromRegistry`, whose `nodeData` is total (`{ }` on an unknown id) ──
+  defaultFactor = dim: entries: {
+    inherit dim;
+    graph = graph.fromRegistry {
+      registry = entries;
+      edges = _: _: [ ];
+    };
   };
 
   # Mock directed graphs.
@@ -185,6 +196,7 @@ in
     mkDigraph
     idFactor
     registryFactor
+    defaultFactor
     gA
     gB
     gLoop

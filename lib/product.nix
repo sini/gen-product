@@ -20,7 +20,7 @@ let
     length
     listToAttrs
     ;
-  inherit (factor) normalizeFactors firstDuplicate;
+  inherit (factor) normalizeFactors checkFactors firstDuplicate;
   inherit (view) mkView enumerationOf;
 
   validKinds = [
@@ -53,12 +53,16 @@ let
       if dup != null then
         throw "gen-product: duplicate-dim '${dup}' — two factors share a dimension name"
       else
-        # A fresh `def` and no restriction — there is nothing to share from, so the constructed
-        # product derives its own member set.
-        mkView {
-          inherit def;
-          enumeration = enumerationOf def null;
-        };
+        # The factor-shape doors fire HERE, outside notANode's tryEval, so their names survive.
+        checkFactors factors
+          # A fresh `def` and no restriction — there is nothing to share from, so the constructed
+          # product derives its own member set.
+          (
+            mkView {
+              inherit def;
+              enumeration = enumerationOf def null;
+            }
+          );
 
   cartesian =
     f1: f2:

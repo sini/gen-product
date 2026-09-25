@@ -61,13 +61,22 @@ let
   # iff `key entry` throws, `entryOf (key entry)` throws, or the round-trip `key (entryOf (key entry))`
   # mismatches. Never scans a factor's `nodes` list. Vacuous on the identity codec (round-trip always
   # holds), where non-nodes surface downstream instead.
+  #
+  # The RESULT DOOR: a `key` that returns is a claim that its value is a node id, so a value that is
+  # never one is a malformed factor, refused by name OUTSIDE the `tryEval` (inside it the name would
+  # be swallowed into a misattributed not-a-node). The shape is gen-graph's `nodeKey`
+  # (`lib/key.nix`): set, list, function and null are refused, every scalar is kept (which scalars
+  # are node ids is den-hoag-3w9e7's ruling, not this door's). Reused by every caller of `notANode`.
   notANode =
     f: entry:
     let
       k = tryEval (f.key entry);
+      v = k.value;
     in
     if !k.success then
       true
+    else if builtins.isAttrs v || builtins.isList v || builtins.isFunction v || v == null then
+      throw "gen-product: malformed-factor — dim '${f.dim}': `key` returned a ${builtins.typeOf v}, not a node id (a scalar)"
     else
       let
         e = tryEval (f.entryOf k.value);

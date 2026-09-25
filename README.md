@@ -111,6 +111,15 @@ in genProduct.cartesian hostFactor userFactor
 - **Identity at the boundary.** Coordinates are **registry entries** keyed by dimension name; cellIds
   are opaque internal keys (canonical `builtins.toJSON` of the ordered factor node ids). No public
   function takes or returns a `"kind:name"` string.
+- **Factor-spec contract.** A codec failure gen-product can decide is a named refusal: the default
+  `key` refuses a coordinate without `id_hash` (so `cell` says `not-a-node`); a `key` or `entryOf`
+  that is not callable, an `entryOf` naming a pattern formal, and a `key` returning a set, list,
+  function or null are `malformed-factor`, refused when the product is built or the cell addressed.
+  What it cannot decide is the caller's: a supplied `entryOf` (or the graph's `nodeData` when
+  `entryOf` is defaulted) and a supplied `key` must **return or `throw`** on a non-node, never abort.
+  An abort inside their body (a bare `entries.${id}`, a type error) is not catchable by `tryEval`, so
+  it ends the evaluation instead of raising `not-a-node`. Write
+  `entryOf = id: entries.${id} or (throw "…")`, or use gen-graph's `fromRegistry` with the defaults.
 - **No decomposition.** gen-product *builds* products; it never factors a graph into primes (no
   Sabidussi–Vizing recognition/cancellation). It answers structural questions only — it never
   evaluates content.
