@@ -12,7 +12,14 @@ let
   factor = import ./factor.nix { inherit prelude; };
   adjacency = import ./adjacency.nix { inherit prelude; };
   membership = import ./membership.nix { inherit prelude; };
-  view = import ./view.nix { inherit prelude adjacency membership; };
+  view = import ./view.nix {
+    inherit
+      prelude
+      adjacency
+      membership
+      show
+      ;
+  };
   product = import ./product.nix { inherit prelude factor view; };
   quotient = import ./quotient.nix { inherit prelude; };
   chain = import ./chain.nix {
@@ -36,7 +43,7 @@ let
     ;
 
   # ── addressing (public wrappers; take/return entries, cellIds are opaque internal keys) ──
-  cell = pg: coords: pg.__cell coords;
+  inherit (view) cell;
   coordsOf = pg: cellId: pg.product.coordsOf cellId;
   cells = pg: pg.__cells;
 
@@ -51,7 +58,7 @@ let
       throw "gen-product: unknown-dim '${dim}' — declared (free) dims: ${concatStringsSep ", " pg.product.dims}"
     else
       let
-        f = pg.__def.factorsByDim.${dim};
+        f = pg.product.factors.${dim};
       in
       f.graph
       // {
@@ -65,25 +72,27 @@ let
   restrict =
     pg: rawMembership:
     let
-      m = normalizeMembership pg.__def rawMembership;
-      r = pg.__restriction;
-      combined = if r == null then m else conjoin pg.__def r m;
+      inherit (pg.product) def base;
+      m = normalizeMembership def rawMembership;
+      r = pg.product.restriction;
+      combined = if r == null then m else conjoin def r m;
     in
     mkView {
-      def = pg.__def;
-      base = pg.__base;
+      inherit def base;
       restriction = combined;
       # THE RESTRICTION CHANGED, so the member set changed: this site derives, it does not thread
-      # `pg.__enumeration`. Threading the parent's set here is the one way to make sharing wrong
+      # `pg.product.enumeration`. Threading the parent's set here is the one way to make sharing wrong
       # rather than merely fast, which is why the shared value is keyed on (def, restriction) and
       # not on `def` alone.
-      enumeration = enumerationOf pg.__def combined;
+      enumeration = enumerationOf def combined;
     };
 in
 product
 // quotient
 // chain
-// show
+// {
+  inherit (show) show;
+}
 // {
   inherit
     cell

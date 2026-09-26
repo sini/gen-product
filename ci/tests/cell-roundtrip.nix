@@ -27,7 +27,7 @@ let
     lib.all (
       c:
       let
-        cid = prod.__cell c;
+        cid = gp.cell prod c;
         back = gp.coordsOf prod cid;
       in
       hashes back == hashes c && gp.cell prod back == cid

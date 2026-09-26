@@ -206,6 +206,7 @@ in
       "lib/factor.nix"
       "lib/membership.nix"
       "lib/quotient.nix"
+      "lib/show.nix"
       "lib/view.nix"
       "flake.nix"
       "default.nix"

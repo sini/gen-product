@@ -118,9 +118,20 @@ materialized membership index every point test reads (ADR-0012 clause 2; binding
 `indexOfRelation`). Both are thunks, so an unprobed restriction builds no index.
 
 **`<pgraph>`** (produced) — the accessor record `edges` / `parent` / `nodes` / `nodeData`, plus
-`product = { kind; dims; factors; cellOf; coordsOf; base; restriction; }` (`restriction` is the
-normalized record above, or `null`), plus nine `__`-prefixed
-internals (`__def __base __restriction __enumeration __cell __cells __freeDims __showCoords __renderEntry`).
+`product = { kind; dims; factors; cellOf; coordsOf; base; restriction; def; enumeration; }`
+(`restriction` is the normalized record above, or `null`), plus one `__` key, `__cells`. Every
+gen-product operation reads these declared fields; `cell` is a function over them (`lib/view.nix`
+binding `cell`), not state on the record.
+
+- `def = { kind; dims; factorsByDim; factorsList; }` is the full product this view is induced from;
+  every view built from one product shares it. It is not `factors`: on a slice `factors` holds the
+  free dims only, `def.factorsByDim` all of them.
+- `enumeration = { members; fibersByDim; }` is the member set of (`def`, `restriction`) in full
+  coordinates. Slices share it; `restrict` derives a new one.
+- `__cells` — writer `mkView`, reader `cells` (`lib/default.nix`): this view's members in free
+  coordinates, in `nodes` order, materialized so `cells` never decodes a node (ADR-0012 clause 2).
+  It keeps its `__` name under R12's stated-contract arm because R8 retires "cell" for a node and its
+  replacement, `nodes`, already names this record's cellId list; the name is den-hoag-7gp66's.
 
 ### Contract seam consumed by gen-select
 
@@ -128,18 +139,18 @@ gen-select's `adapters.product.mkContext` is a structural translator with **no g
 (stated at gen-select `lib/adapters/product.nix:1-8`); from this side the consumed contract is two
 outputs plus the coordinate currency.
 
-| gen-select parameter                                                                    | gen-product output                                                                | Evidence                                                                                                               |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `cellIds`                                                                               | `<pgraph>.nodes : [ cellId ]`                                                     | `lib/view.nix:213`; `pg.nodes` ⇒ `["[\"H_a\",\"U_s\"]","[\"H_a\",\"U_v\"]",…]`                                         |
-| `coordsFor`                                                                             | `<pgraph>.product.coordsOf : cellId -> { <dim> = entry; }`                        | `lib/view.nix:254`, codec `lib/view.nix:121-131`; top-level `coordsOf pg cid` is the same function (`lib/default.nix`) |
-| `parent` (default `_: null`)                                                            | `<pgraph>.parent`, constantly `null`                                              | `lib/view.nix:parent`; `pg.parent cid` ⇒ `null`                                                                        |
-| `dataFor` (default `_: { }`)                                                            | nothing — gen-product's `nodeData` *is* `coordsOf`, it carries no extra cell data | `lib/view.nix:178`                                                                                                     |
-| `coord dim entry` requires `entry ? id_hash` (gen-select `lib/adapters/product.nix:16`) | satisfied on the registry path, where `key` defaults to `entry: entry.id_hash`    | `lib/factor.nix` binding `normalizeFactor` (default `key`); `(gp.coordsOf pg cid).host.id_hash` ⇒ `"H_a"`              |
+| gen-select parameter                                                                    | gen-product output                                                                | Evidence                                                                                                                             |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `cellIds`                                                                               | `<pgraph>.nodes : [ cellId ]`                                                     | `lib/view.nix:213`; `pg.nodes` ⇒ `["[\"H_a\",\"U_s\"]","[\"H_a\",\"U_v\"]",…]`                                                       |
+| `coordsFor`                                                                             | `<pgraph>.product.coordsOf : cellId -> { <dim> = entry; }`                        | `lib/view.nix` binding `product`, codec `lib/view.nix:120-131`; top-level `coordsOf pg cid` is the same function (`lib/default.nix`) |
+| `parent` (default `_: null`)                                                            | `<pgraph>.parent`, constantly `null`                                              | `lib/view.nix:parent`; `pg.parent cid` ⇒ `null`                                                                                      |
+| `dataFor` (default `_: { }`)                                                            | nothing — gen-product's `nodeData` *is* `coordsOf`, it carries no extra cell data | `lib/view.nix:178`                                                                                                                   |
+| `coord dim entry` requires `entry ? id_hash` (gen-select `lib/adapters/product.nix:16`) | satisfied on the registry path, where `key` defaults to `entry: entry.id_hash`    | `lib/factor.nix` binding `normalizeFactor` (default `key`); `(gp.coordsOf pg cid).host.id_hash` ⇒ `"H_a"`                            |
 
 **Cells carry no identity of their own** — gen-select hardcoding `__identity = null` matches what this
 side emits. `pg.nodeData cid` ⇒ `attrNames` `["host","user"]`, `? __identity` ⇒ `false`, `? __coords` ⇒
 `false`; `git grep -n '__identity\|__coords' -- lib/` returns nothing (control, same instrument,
-`__def`: 3 files). Identity sits one level down, on the coordinate entries: `(pg.nodeData cid).host`
+`__cells`: 2 files). Identity sits one level down, on the coordinate entries: `(pg.nodeData cid).host`
 ⇒ `attrNames` `["class","id_hash","name"]`. On the identity-codec path (a bare accessor-graph factor)
 coordinates are raw node id **strings** with no `id_hash` at all.
 

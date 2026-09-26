@@ -19,6 +19,7 @@
   prelude,
   adjacency,
   membership,
+  show,
 }:
 let
   inherit (prelude)
@@ -48,14 +49,7 @@ let
   inherit (adjacency) targetsFor;
   inherit (membership) isMember enumerationOf;
 
-  # Render a coordinate entry for an error message — its `.name` if present, else its JSON key.
-  # display only; never part of the data vocabulary.
-  renderEntry =
-    f: entry:
-    let
-      t = tryEval (if entry ? name then entry.name else toJSON (f.key entry));
-    in
-    if t.success then (if isString t.value then t.value else toJSON t.value) else "<malformed-entry>";
+  inherit (show) renderEntry;
 
   # Pointwise not-a-node detection (reconciled with Kahn 1974 demand-driven laziness): a coordinate is not-a-node
   # iff `key entry` throws, `entryOf (key entry)` throws, or the round-trip `key (entryOf (key entry))`
@@ -218,37 +212,6 @@ let
 
       nodes = map cellOfFree cellsList;
 
-      # ── validated addressing (public `cell`) ──
-      declaredMsg = "declared (free) dims: ${concatStringsSep ", " freeDims}";
-      cellValidated =
-        coords:
-        let
-          ks = attrNames coords;
-          unknown = filter (d: !(elem d freeDims)) ks;
-          missing = filter (d: !(builtins.hasAttr d coords)) freeDims;
-          badNode = filter (d: notANode def.factorsByDim.${d} coords.${d}) freeDims;
-        in
-        if unknown != [ ] then
-          let
-            d = head unknown;
-            fixedNote = if builtins.hasAttr d base then " (dimension '${d}' is fixed in this slice)" else "";
-          in
-          throw "gen-product: unknown-dim '${d}'${fixedNote} — ${declaredMsg}"
-        else if missing != [ ] then
-          throw "gen-product: missing-dim — cell requires coordinates for: ${concatStringsSep ", " missing}"
-        else if badNode != [ ] then
-          refuseNotANode def (head badNode) coords
-        else if restriction != null && !(isMember def restriction (base // coords)) then
-          throw "gen-product: not-a-member — ${showCoords (base // coords)} is outside this restricted product"
-        else
-          cellOfFree coords;
-
-      showCoords =
-        coords:
-        concatStringsSep ", " (
-          map (d: "${d}=${renderEntry def.factorsByDim.${d} coords.${d}}") (attrNames coords)
-        );
-
       product = {
         inherit (def) kind;
         dims = freeDims;
@@ -257,6 +220,7 @@ let
         coordsOf = coordsOfFree;
         inherit base;
         inherit restriction;
+        inherit def enumeration;
       };
     in
     {
@@ -267,16 +231,46 @@ let
         nodeData
         product
         ;
-      __def = def;
-      __base = base;
-      __restriction = restriction;
-      __enumeration = enumeration;
-      __cell = cellValidated;
+      # This view's members in free coordinates, in `nodes` order; read by `cells`. Kept under its
+      # `__` name (R12, stated contract; AGENTS.md `<pgraph>`) until den-hoag-7gp66 names it: R8
+      # retires "cell" for a node, and its table's replacement, `nodes`, is already this record's.
       __cells = cellsList;
-      __freeDims = freeDims;
-      __showCoords = showCoords;
-      __renderEntry = renderEntry;
     };
+
+  showCoords =
+    def: coords:
+    concatStringsSep ", " (
+      map (d: "${d}=${renderEntry def.factorsByDim.${d} coords.${d}}") (attrNames coords)
+    );
+
+  # Validated addressing (public `cell`), read off the declared `product` field only.
+  cell =
+    pg: coords:
+    let
+      inherit (pg.product) def base restriction;
+      freeDims = pg.product.dims;
+      declaredMsg = "declared (free) dims: ${concatStringsSep ", " freeDims}";
+      ks = attrNames coords;
+      unknown = filter (d: !(elem d freeDims)) ks;
+      missing = filter (d: !(builtins.hasAttr d coords)) freeDims;
+      badNode = filter (d: notANode def.factorsByDim.${d} coords.${d}) freeDims;
+    in
+    if unknown != [ ] then
+      let
+        d = head unknown;
+        fixedNote = if builtins.hasAttr d base then " (dimension '${d}' is fixed in this slice)" else "";
+      in
+      throw "gen-product: unknown-dim '${d}'${fixedNote} — ${declaredMsg}"
+    else if missing != [ ] then
+      throw "gen-product: missing-dim — cell requires coordinates for: ${concatStringsSep ", " missing}"
+    else if badNode != [ ] then
+      refuseNotANode def (head badNode) coords
+    else if restriction != null && !(isMember def restriction (base // coords)) then
+      throw "gen-product: not-a-member — ${
+        showCoords def (base // coords)
+      } is outside this restricted product"
+    else
+      pg.product.cellOf coords;
 
   # Slice a pgraph: fix a subset of its FREE dimensions. Validates that each named dim is free
   # (naming a fixed dim is an unknown-dim error) and that each fixed coordinate is a node of its own
@@ -286,36 +280,41 @@ let
   sliceView =
     pg: partialCoords:
     let
-      freeDims = pg.__freeDims;
+      inherit (pg.product)
+        def
+        base
+        restriction
+        enumeration
+        ;
+      freeDims = pg.product.dims;
       unknown = filter (d: !(elem d freeDims)) (attrNames partialCoords);
       badNode = filter (
-        d: builtins.hasAttr d partialCoords && notANode pg.__def.factorsByDim.${d} partialCoords.${d}
+        d: builtins.hasAttr d partialCoords && notANode def.factorsByDim.${d} partialCoords.${d}
       ) freeDims;
     in
     if unknown != [ ] then
       let
         d = head unknown;
-        fixedNote =
-          if builtins.hasAttr d pg.__base then " (dimension '${d}' is fixed in this slice)" else "";
+        fixedNote = if builtins.hasAttr d base then " (dimension '${d}' is fixed in this slice)" else "";
       in
       throw "gen-product: unknown-dim '${d}'${fixedNote} — declared (free) dims: ${concatStringsSep ", " freeDims}"
     else if badNode != [ ] then
-      refuseNotANode pg.__def (head badNode) partialCoords
+      refuseNotANode def (head badNode) partialCoords
     else
       mkView {
-        def = pg.__def;
-        base = pg.__base // partialCoords;
-        restriction = pg.__restriction;
+        inherit def restriction;
+        base = base // partialCoords;
         # `def` and `restriction` are carried through UNCHANGED, which is exactly the hypothesis
         # under which the parent's member set is this slice's — satisfied by the expression itself
         # rather than by a claim about it. Slicing is the only constructor that may thread it.
-        enumeration = pg.__enumeration;
+        inherit enumeration;
       };
 in
 {
   inherit
     mkView
     sliceView
+    cell
     notANode
     enumerationOf
     ;

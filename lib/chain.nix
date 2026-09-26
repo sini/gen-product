@@ -147,7 +147,7 @@ let
   containmentChain =
     pg: coords: lin:
     let
-      _validated = pg.__cell coords; # reuse cell validation (unknown/missing/not-a-node/not-a-member)
+      _validated = view.cell pg coords; # reuse cell validation (unknown/missing/not-a-node/not-a-member)
       D = pg.product.dims; # free dims of pg, declared order
       subs = subsets D;
       projectCoords =

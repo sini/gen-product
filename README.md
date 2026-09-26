@@ -92,7 +92,10 @@ in genProduct.cartesian hostFactor userFactor
 ## Design Principles
 
 - **A product is an accessor-graph.** `productN`, `slice`, `fiber`, `restrict`, and `quotient` all
-  return the accessor record `{ edges, parent, nodes, nodeData }` (plus a `product` metadata field);
+  return the accessor record `{ edges, parent, nodes, nodeData }` (plus a `product` metadata field,
+  `{ kind, dims, factors, cellOf, coordsOf, base, restriction, def, enumeration }`, which every
+  gen-product operation reads, and `__cells`, the materialized member list `cells` returns — its
+  contract is in AGENTS.md `<pgraph>`);
   gen-graph queries apply unchanged, and products nest as factors of other products.
 - **Lazy in, lazy out.** Adjacency, cell addressing, slices, projections, and containment chains never
   scan a factor's `nodes` list — not-a-node and not-a-member detection is *pointwise* (via a codec

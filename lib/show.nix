@@ -7,16 +7,26 @@
 { prelude }:
 let
   inherit (prelude) map concatStringsSep attrNames;
+  inherit (builtins) toJSON tryEval isString;
+
+  # Render a coordinate entry for an error message — its `.name` if present, else its JSON key.
+  renderEntry =
+    f: entry:
+    let
+      t = tryEval (if entry ? name then entry.name else toJSON (f.key entry));
+    in
+    if t.success then (if isString t.value then t.value else toJSON t.value) else "<malformed-entry>";
 
   showCell =
     pg: coords:
     concatStringsSep ", " (
-      map (d: "${d}=${pg.__renderEntry pg.__def.factorsByDim.${d} coords.${d}}") (attrNames coords)
+      map (d: "${d}=${renderEntry pg.product.def.factorsByDim.${d} coords.${d}}") (attrNames coords)
     );
 
   showSubset = dims: "{" + concatStringsSep "," dims + "}";
 in
 {
+  inherit renderEntry;
   show = {
     cell = showCell;
     subset = showSubset;
