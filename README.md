@@ -5,7 +5,9 @@
 Pure graph products for Nix. gen-product builds the four standard graph products — **Cartesian**,
 **tensor** (direct), **strong**, and **lexicographic** — over *accessor-graphs*, the
 [gen-graph](https://github.com/sini/gen-graph) accessor-record convention. Products are **lazy in and
-lazy out**: a product *is* an accessor-graph (every gen-graph query works on it unchanged), extended
+lazy out**: a product *is* an accessor-graph (gen-graph's accessor-record queries take it whole,
+`topoOrder` included; its labeled-graph doors — `forgetLabels`, `labeledTranspose`, `query`,
+`queryFold` — take a labeled graph, which a product is not), extended
 with product metadata that gen-product's own operations read.
 
 gen-product is **nixpkgs-lib-free** (Class B): it depends only on
@@ -96,7 +98,8 @@ in genProduct.cartesian hostFactor userFactor
   `{ kind, dims, factors, cellOf, coordsOf, base, restriction, def, enumeration }`, which every
   gen-product operation reads, and `__cells`, the materialized member list `cells` returns — its
   contract is in AGENTS.md `<pgraph>`);
-  gen-graph queries apply unchanged, and products nest as factors of other products.
+  gen-graph's accessor-record queries apply unchanged (its labeled-graph doors do not: a product is
+  not a labeled graph), and products nest as factors of other products.
 - **Lazy in, lazy out.** Adjacency, cell addressing, slices, projections, and containment chains never
   scan a factor's `nodes` list — not-a-node and not-a-member detection is *pointwise* (via a codec
   round-trip), so `cell` and `containmentChain` succeed even under `nodes = throw …`. The `en-masse`
