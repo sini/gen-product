@@ -49,10 +49,7 @@ let
   # `fromRegistry`, whose `nodeData` is total (`{ }` on an unknown id) ──
   defaultFactor = dim: entries: {
     inherit dim;
-    graph = graph.fromRegistry {
-      registry = entries;
-      edges = _: _: [ ];
-    };
+    graph = graph.fromRegistry { } (_: _: [ ]) entries;
   };
 
   # Mock directed graphs.
