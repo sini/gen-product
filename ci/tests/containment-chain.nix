@@ -36,7 +36,7 @@ let
 
   # each chain entry → its sorted fixed-dimension names (identifies the subset).
   chainSubsets =
-    lin: map (r: lib.sort lib.lessThan (builtins.attrNames r.fixed)) (gp.containmentChain p c lin);
+    lin: map (r: lib.sort lib.lessThan (builtins.attrNames r.fixed)) (gp.containmentChain c lin p);
 
   dimOrder = gp.linearizeByDimOrder [
     "env"
@@ -71,7 +71,7 @@ let
     map (r: {
       fixed = lib.mapAttrs (_: e: e.id_hash) r.fixed;
       inherit (r) free rank;
-    }) (gp.containmentChain p c lin);
+    }) (gp.containmentChain c lin p);
 
   # degenerate inputs.
   missingRank = builtins.tryEval (
@@ -134,7 +134,7 @@ let
   );
 
   # restricted product chain + not-a-member coords.
-  restricted = gp.restrict p {
+  restricted = gp.restrict {
     cells = [
       c
       {
@@ -143,16 +143,16 @@ let
         user = users.U_vic;
       }
     ];
-  };
+  } p;
   chainOnRestricted = map (r: lib.sort lib.lessThan (builtins.attrNames r.fixed)) (
-    gp.containmentChain restricted c dimOrder
+    gp.containmentChain c dimOrder restricted
   );
   nonMemberChain = builtins.tryEval (
-    gp.containmentChain restricted {
+    gp.containmentChain {
       env = envs.E_dev;
       host = hosts.H_axon02;
       user = users.U_vic;
-    } dimOrder
+    } dimOrder restricted
   );
 in
 {

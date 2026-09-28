@@ -41,9 +41,9 @@ userFactor = { dim = "user"; graph = usersGraph; };
 fleet = genProduct.productN "cartesian" [ hostFactor userFactor ];
 
 # a CELL is a full coordinate — the id gen-graph queries take
-cellId = genProduct.cell fleet { host = hosts.axon-01; user = users.sini; };
+cellId = genProduct.cell { host = hosts.axon-01; user = users.sini; } fleet;
 fleet.edges cellId                        # product adjacency (an ordinary accessor)
-genProduct.coordsOf fleet cellId          # → { host = <entry>; user = <entry>; }
+genProduct.coordsOf cellId fleet          # → { host = <entry>; user = <entry>; }
 ```
 
 Adjacency per kind — the cell `u = { d_i = u_i }` has an edge to `v = { d_i = v_i }` (writing
@@ -138,28 +138,29 @@ repository — reference specs live there, not in the library repo. In brief:
 ```nix
 # constructors
 productN       = kind: factors: <pgraph>;       # kind ∈ cartesian | tensor | strong | lexicographic
-cartesian | tensor | strong | lexicographic = f1: f2: <pgraph>;
+cartesian | tensor | strong = f1: f2: <pgraph>;
+lexicographic  = { major, minor }: <pgraph>;   # not commutative: the fields carry the order
 
 # addressing (coords are attrsets of registry entries)
-cell     = pgraph: coords: <cellId>;
-coordsOf = pgraph: cellId: coords;
+cell     = coords: pgraph: <cellId>;
+coordsOf = cellId: pgraph: coords;
 cells    = pgraph: [ coords ];                  # lazy lattice enumeration, pinned row-major
 
 # sub-structures
-slice     = pgraph: partialCoords: <pgraph>;    # induced sub-product over remaining dims
-fiber     = pgraph: dim: entry: <pgraph>;       # preimage of the projection onto dim
-projectTo = pgraph: dim: <graph>;               # factor graph + projection metadata
-restrict  = pgraph: membership: <pgraph>;       # sparse sub-product (the real fleet)
-quotient  = graph: { classOf, … }: <graph>;     # class-share = quotient by class
+slice     = partialCoords: pgraph: <pgraph>;    # induced sub-product over remaining dims
+fiber     = dim: entry: pgraph: <pgraph>;       # preimage of the projection onto dim
+projectTo = dim: pgraph: <graph>;               # factor graph + projection metadata
+restrict  = membership: pgraph: <pgraph>;       # sparse sub-product (the real fleet)
+quotient  = { key ?, classData ?, keepSelfLoops ? }: classOf: graph: <graph>;     # class-share = quotient by class
 
 # specificity lattice
-containmentChain = pgraph: coords: linearization: [ <sliceRecord> ];
+containmentChain = coords: linearization: pgraph: [ <sliceRecord> ];
 linearizeByDimOrder = dims: <linearization>;    # count-major — the den fleet default
 linearizations.byRank = ranks: <linearization>; # top-rank interleave
 latticeGraph = dims: { nodes; edges; };         # 2^D covering relation (Hasse), node.query-traversable
 
 # error-message helpers (not a rendering API)
-show.cell   = pgraph: coords: string;
+show.cell   = coords: pgraph: string;
 show.subset = dims: string;
 ```
 

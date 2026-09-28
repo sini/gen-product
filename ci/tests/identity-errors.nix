@@ -50,14 +50,14 @@ let
   );
   # unknown-dim: coords reference an undeclared dim.
   unknownDim = fails (
-    gp.cell p {
+    gp.cell {
       host = hosts.H_axon01;
       user = users.U_sini;
       env = users.U_vic;
-    }
+    } p
   );
   # missing-dim: partial coords to cell.
-  missingDim = fails (gp.cell p { host = hosts.H_axon01; });
+  missingDim = fails (gp.cell { host = hosts.H_axon01; } p);
 
   # not-a-node — (b) control: an entryOf that fails via an EXPLICIT `throw` (a caller-authored
   # guard, distinct from the fixture's naive idiom — see `../tests-error.nix`) IS caught by the
@@ -79,13 +79,13 @@ let
     uf
   ];
   notNodeExplicitThrowControl = fails (
-    gp.cell pThrow {
+    gp.cell {
       host = {
         id_hash = "ghost";
         name = "ghost";
       };
       user = users.U_sini;
-    }
+    } pThrow
   );
 
   # not-a-node — (c) round-trip-mismatching entryOf (always returns a fixed wrong entry).
@@ -100,10 +100,10 @@ let
     uf
   ];
   notNodeMismatch = fails (
-    gp.cell pMismatch {
+    gp.cell {
       host = hosts.H_axon01;
       user = users.U_sini;
-    }
+    } pMismatch
   );
 
   # VACUOUS identity-codec path: a non-node id passes `cell` (round-trip trivially holds).
@@ -113,35 +113,33 @@ let
   ];
   vacuous =
     (builtins.tryEval (
-      gp.cell idProd {
+      gp.cell {
         x = "not-a-real-node";
         y = "b0";
-      }
+      } idProd
     )).success;
 
   # not-a-member on a restricted product.
-  restricted = gp.restrict p {
+  restricted = gp.restrict {
     cells = [
       {
         host = hosts.H_axon01;
         user = users.U_sini;
       }
     ];
-  };
+  } p;
   notMember = fails (
-    gp.cell restricted {
+    gp.cell {
       host = hosts.H_blade01;
       user = users.U_vic;
-    }
+    } restricted
   );
 
   # entries-in / entries-out audit: coordsOf returns registry ENTRIES (id_hash + name), not strings.
-  recovered = gp.coordsOf p (
-    gp.cell p {
-      host = hosts.H_axon02;
-      user = users.U_vic;
-    }
-  );
+  recovered = gp.coordsOf (gp.cell {
+    host = hosts.H_axon02;
+    user = users.U_vic;
+  } p) p;
 in
 {
   flake.tests.identity-errors = {
@@ -204,17 +202,13 @@ in
     # entries-in: the public codec accepts entries (never a "kind:name" string) — round-trip witness.
     test-entries-in-accepted = {
       expr =
-        gp.cell p (
-          gp.coordsOf p (
-            gp.cell p {
-              host = hosts.H_axon01;
-              user = users.U_sini;
-            }
-          )
-        ) == gp.cell p {
+        gp.cell (gp.coordsOf (gp.cell {
           host = hosts.H_axon01;
           user = users.U_sini;
-        };
+        } p) p) p == gp.cell {
+          host = hosts.H_axon01;
+          user = users.U_sini;
+        } p;
       expected = true;
     };
   };

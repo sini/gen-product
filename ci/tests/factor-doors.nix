@@ -92,26 +92,26 @@ in
     test-default-codec-not-a-node-is-catchable = {
       expr =
         !(builtins.tryEval (
-          builtins.deepSeq (gp.cell pDefault {
+          builtins.deepSeq (gp.cell {
             host = ghost;
             user = users.U_sini;
-          }) true
+          } pDefault) true
         )).success;
       expected = true;
     };
     test-default-codec-addresses-a-node = {
-      expr = gp.cell pDefault good;
+      expr = gp.cell good pDefault;
       expected = "[\"H_axon01\",\"U_sini\"]";
     };
     test-default-codec-restricted-addresses-a-member = {
-      expr = gp.cell (gp.restrict pDefault { cells = [ good ]; }) good;
+      expr = gp.cell good (gp.restrict { cells = [ good ]; } pDefault);
       expected = "[\"H_axon01\",\"U_sini\"]";
     };
     test-int-node-id-addresses = {
-      expr = gp.cell pInt {
+      expr = gp.cell {
         host = builtins.elemAt ints 1;
         user = users.U_sini;
-      };
+      } pInt;
       expected = "[1,\"U_sini\"]";
     };
     test-int-node-id-enumerated = {
@@ -127,44 +127,44 @@ in
     # so a non-node is a CATCHABLE refusal (named on `../tests-error.nix`, `slice-doors`), never an
     # empty fiber at rc 0. Controls: a real node's fiber and slice, and an integer-id fiber.
     test-fiber-non-node-is-catchable = {
-      expr = !(builtins.tryEval (builtins.deepSeq (gp.fiber pDefault "host" ghost).nodes true)).success;
+      expr = !(builtins.tryEval (builtins.deepSeq (gp.fiber "host" ghost pDefault).nodes true)).success;
       expected = true;
     };
     test-slice-non-node-is-catchable = {
       expr =
         !(builtins.tryEval (
           builtins.deepSeq
-            (gp.slice pDefault {
+            (gp.slice {
               host = hosts.H_axon01;
               user = ghost;
-            }).nodes
+            } pDefault).nodes
             true
         )).success;
       expected = true;
     };
     test-fiber-real-node = {
-      expr = (gp.fiber pDefault "host" hosts.H_axon01).nodes;
+      expr = (gp.fiber "host" hosts.H_axon01 pDefault).nodes;
       expected = [
         "[\"U_sini\"]"
         "[\"U_vic\"]"
       ];
     };
     test-slice-real-nodes = {
-      expr = (gp.slice pDefault good).nodes;
+      expr = (gp.slice good pDefault).nodes;
       expected = [ "[]" ];
     };
     test-int-node-id-fiber = {
-      expr = (gp.fiber pInt "host" (builtins.elemAt ints 1)).nodes;
+      expr = (gp.fiber "host" (builtins.elemAt ints 1) pInt).nodes;
       expected = [
         "[\"U_sini\"]"
         "[\"U_vic\"]"
       ];
     };
     test-int-bare-accessor-addresses = {
-      expr = gp.cell pBareInt {
+      expr = gp.cell {
         "0" = 1;
         "1" = "a";
-      };
+      } pBareInt;
       expected = "[1,\"a\"]";
     };
   };

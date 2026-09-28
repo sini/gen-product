@@ -28,19 +28,19 @@ let
       "b2"
     ]))
   ];
-  r = gp.restrict p {
+  r = gp.restrict {
     cells = [
       {
         a = "a1";
         b = "b1";
       }
     ];
-  };
+  } p;
   published = [
     p
-    (gp.fiber p "a" "a1")
+    (gp.fiber "a" "a1" p)
     r
-    (gp.fiber r "b" "b1")
+    (gp.fiber "b" "b1" r)
   ];
   dunder = pg: lib.filter (lib.hasPrefix "__") (lib.attrNames pg);
 in
@@ -55,7 +55,7 @@ in
     ];
   };
   flake.tests.record-surface.test-slice-keeps-ambient-definition = {
-    expr = lib.attrNames ((gp.fiber p "a" "a1").product.def or { factorsByDim = { }; }).factorsByDim;
+    expr = lib.attrNames ((gp.fiber "a" "a1" p).product.def or { factorsByDim = { }; }).factorsByDim;
     expected = [
       "a"
       "b"

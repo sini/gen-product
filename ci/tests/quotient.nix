@@ -61,11 +61,8 @@ let
     nodeData = id: hostData.${id};
   };
 
-  q = gp.quotient hostsGraph { classOf = h: h.class; };
-  qNoLoops = gp.quotient hostsGraph {
-    classOf = h: h.class;
-    keepSelfLoops = false;
-  };
+  q = gp.quotient { } (h: h.class) hostsGraph;
+  qNoLoops = gp.quotient { keepSelfLoops = false; } (h: h.class) hostsGraph;
 
   classOf = id: hostData.${id}.class.id_hash;
   # soundness oracle: for every input edge u->v, [u]->[v] must be a quotient edge.
@@ -82,6 +79,61 @@ let
 in
 {
   flake.tests.quotient = {
+    # P2 (R7): the options are one closed set, first, checked when `quotient opts` is formed, before
+    # any class function or graph (G1/G4); a non-default option reaches the partially applied door
+    # (G3); the door publishes its options as data (D3).
+    test-p2-unknown-option-refused-at-the-options-application = {
+      expr = (builtins.tryEval (builtins.seq (gp.quotient { keepSelfLoop = false; }) null)).success;
+      expected = false;
+    };
+    test-p2-partial-application-carries-a-non-default-option = {
+      expr =
+        let
+          f0 = gp.quotient { };
+          f1 = gp.quotient { keepSelfLoops = false; };
+          byClass =
+            f:
+            map (C: (f (h: h.class) hostsGraph).edges C) [
+              "cA"
+              "cB"
+            ];
+        in
+        {
+          agrees =
+            byClass f1 == map (C: qNoLoops.edges C) [
+              "cA"
+              "cB"
+            ];
+          differs = byClass f1 != byClass f0;
+        };
+      expected = {
+        agrees = true;
+        differs = true;
+      };
+    };
+    test-p2-options-published-as-data = {
+      expr = [
+        (
+          gp.quotient.__functionArgs == builtins.functionArgs (
+            {
+              key ? null,
+              classData ? null,
+              keepSelfLoops ? null,
+            }:
+            null
+          )
+        )
+        gp.quotient.__contract.optional
+      ];
+      expected = [
+        true
+        [
+          "key"
+          "classData"
+          "keepSelfLoops"
+        ]
+      ];
+    };
     # pinned first-seen class order.
     test-class-nodes-pinned = {
       expr = q.nodes;

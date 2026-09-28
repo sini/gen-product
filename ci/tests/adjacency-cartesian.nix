@@ -49,21 +49,21 @@ in
     test-concrete-neighbours = {
       expr = lib.sort lib.lessThan (
         bin.edges (
-          gp.cell bin {
+          gp.cell {
             x = "a0";
             y = "b0";
-          }
+          } bin
         )
       );
       expected = lib.sort lib.lessThan [
-        (gp.cell bin {
+        (gp.cell {
           x = "a1";
           y = "b0";
-        })
-        (gp.cell bin {
+        } bin)
+        (gp.cell {
           x = "a0";
           y = "b1";
-        })
+        } bin)
       ];
     };
   };

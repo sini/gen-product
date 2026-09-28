@@ -43,17 +43,20 @@ let
     ;
 
   # ── addressing (public wrappers; take/return entries, cellIds are opaque internal keys) ──
+  # The product is each door's subject, so it comes last (P2, R7): `cell coords pg`,
+  # `coordsOf cellId pg`, `slice partialCoords pg`, `fiber dim entry pg`, `projectTo dim pg`,
+  # `restrict membership pg`.
   inherit (view) cell;
-  coordsOf = pg: cellId: pg.product.coordsOf cellId;
+  coordsOf = cellId: pg: pg.product.coordsOf cellId;
   cells = pg: pg.__cells;
 
-  slice = sliceView;
+  slice = partialCoords: pg: sliceView pg partialCoords;
   fiber =
-    pg: dim: entry:
+    dim: entry: pg:
     sliceView pg { ${dim} = entry; };
 
   projectTo =
-    pg: dim:
+    dim: pg:
     if !(elem dim pg.product.dims) then
       throw "gen-product: unknown-dim '${dim}' — declared (free) dims: ${concatStringsSep ", " pg.product.dims}"
     else
@@ -70,7 +73,7 @@ let
       };
 
   restrict =
-    pg: rawMembership:
+    rawMembership: pg:
     let
       inherit (pg.product) def base;
       m = normalizeMembership def rawMembership;

@@ -62,10 +62,10 @@ let
     tf
   ];
 
-  cid = gp.cell cart {
+  cid = gp.cell {
     t = "t0";
     y = "b0";
-  };
+  } cart;
 in
 {
   flake.tests.laziness = {
@@ -80,7 +80,7 @@ in
       expected = true;
     };
     test-coordsOf-succeeds = {
-      expr = succeeds (force (gp.coordsOf cart cid));
+      expr = succeeds (force (gp.coordsOf cid cart));
       expected = true;
     };
     # adjacency of cartesian/tensor/strong never forces nodes.
@@ -92,10 +92,10 @@ in
       expr = succeeds (
         force (
           tens.edges (
-            gp.cell tens {
+            gp.cell {
               t = "t0";
               y = "b0";
-            }
+            } tens
           )
         )
       );
@@ -105,10 +105,10 @@ in
       expr = succeeds (
         force (
           strong.edges (
-            gp.cell strong {
+            gp.cell {
               t = "t0";
               y = "b0";
-            }
+            } strong
           )
         )
       );
@@ -120,15 +120,15 @@ in
     };
     # slice / fiber / projectTo never force nodes.
     test-slice-succeeds = {
-      expr = succeeds (force ((gp.slice cart { t = "t0"; }).product.dims));
+      expr = succeeds (force ((gp.slice { t = "t0"; } cart).product.dims));
       expected = true;
     };
     test-fiber-succeeds = {
-      expr = succeeds (force ((gp.fiber cart "t" "t0").product.dims));
+      expr = succeeds (force ((gp.fiber "t" "t0" cart).product.dims));
       expected = true;
     };
     test-projectTo-succeeds = {
-      expr = succeeds (force (gp.projectTo cart "y").projection.dim);
+      expr = succeeds (force (gp.projectTo "y" cart).projection.dim);
       expected = true;
     };
     # containmentChain construction + coords validation, without forcing slice structure.
@@ -141,17 +141,16 @@ in
               fixed = lib.mapAttrs (_: v: v) r.fixed;
             })
             (
-              gp.containmentChain cart
+              gp.containmentChain
                 {
                   t = "t0";
                   y = "b0";
                 }
-                (
-                  gp.linearizeByDimOrder [
-                    "t"
-                    "y"
-                  ]
-                )
+                (gp.linearizeByDimOrder [
+                  "t"
+                  "y"
+                ])
+                cart
             )
         )
       );
@@ -162,10 +161,10 @@ in
       expr = succeeds (
         force (
           lex.edges (
-            gp.cell lex {
+            gp.cell {
               ya = "a1";
               t = "t0";
-            }
+            } lex
           )
         )
       );
@@ -188,10 +187,10 @@ in
       expr = succeeds (
         force (
           lexLeadThrow.edges (
-            gp.cell lexLeadThrow {
+            gp.cell {
               yb = "b0";
               t = "t0";
-            }
+            } lexLeadThrow
           )
         )
       );
@@ -199,7 +198,7 @@ in
     };
     # quotient structural access forces the input's nodes → throws.
     test-quotient-forces-input-nodes = {
-      expr = succeeds (force (gp.quotient throwingGraph { classOf = id: { id_hash = id; }; }).nodes);
+      expr = succeeds (force (gp.quotient { } (id: { id_hash = id; }) throwingGraph).nodes);
       expected = false;
     };
   };

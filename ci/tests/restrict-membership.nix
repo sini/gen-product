@@ -30,7 +30,7 @@ let
   idSet = prod: lib.sort lib.lessThan (cellIds prod);
 
   # clause 1 — explicit cells.
-  byCells = gp.restrict p {
+  byCells = gp.restrict {
     cells = [
       {
         host = hosts.H_axon01;
@@ -41,9 +41,9 @@ let
         user = users.U_vic;
       }
     ];
-  };
+  } p;
   # clause 2 — relations (natural join).
-  byRel = gp.restrict p {
+  byRel = gp.restrict {
     relations = [
       {
         dims = [
@@ -62,14 +62,14 @@ let
         ];
       }
     ];
-  };
+  } p;
   # clause 3 — predicate.
-  byPred = gp.restrict p {
+  byPred = gp.restrict {
     predicate = coords: coords.user.id_hash == "U_sini";
-  };
+  } p;
 
   # join (two covering relations) vs filtered-full (equivalent predicate).
-  joinR = gp.restrict p {
+  joinR = gp.restrict {
     relations = [
       {
         dims = [ "host" ];
@@ -83,8 +83,8 @@ let
         pairs = [ { user = users.U_sini; } ];
       }
     ];
-  };
-  filterR = gp.restrict p {
+  } p;
+  filterR = gp.restrict {
     predicate =
       coords:
       lib.elem coords.host.id_hash [
@@ -92,12 +92,12 @@ let
         "H_blade01"
       ]
       && coords.user.id_hash == "U_sini";
-  };
+  } p;
 
   # restrict∘restrict conjunction.
-  conj = gp.restrict byPred {
+  conj = gp.restrict {
     predicate = coords: coords.host.id_hash == "H_axon01";
-  };
+  } byPred;
 
   # predicate-only restriction over a throwing-nodes factor — adjacency must never enumerate.
   throwingGraph = {
@@ -108,23 +108,25 @@ let
   };
   tp =
     gp.restrict
-      (gp.productN "cartesian" [
-        (idFactor "t" throwingGraph)
-        (idFactor "y" fx.gB)
-      ])
       {
         predicate = _: true;
-      };
+      }
+      (
+        gp.productN "cartesian" [
+          (idFactor "t" throwingGraph)
+          (idFactor "y" fx.gB)
+        ]
+      );
 
   nonMember = builtins.tryEval (
-    gp.cell byCells {
+    gp.cell {
       host = hosts.H_axon01;
       user = users.U_vic;
-    }
+    } byCells
   );
 
   # cells-list order + dedup: given order preserved, first-seen dedup.
-  ordered = gp.restrict p {
+  ordered = gp.restrict {
     cells = [
       {
         host = hosts.H_blade01;
@@ -139,7 +141,7 @@ let
         user = users.U_vic;
       } # duplicate
     ];
-  };
+  } p;
 
   # ── the membership index (den-hoag-bksu) ──
   # An index's shape: attrset-ness and its distinct-key count. A key LIST (the rescan's shape) reads
@@ -157,22 +159,22 @@ let
     ];
 
   # restrict ∘ restrict over two cells clauses (class member 3, `conjoin`) and over two relations.
-  conjCells = gp.restrict byCells {
+  conjCells = gp.restrict {
     cells = [
       {
         host = hosts.H_axon01;
         user = users.U_sini;
       }
     ];
-  };
-  conjRels = gp.restrict byRel {
+  } byCells;
+  conjRels = gp.restrict {
     relations = [
       {
         dims = [ "user" ];
         pairs = [ { user = users.U_sini; } ];
       }
     ];
-  };
+  } byRel;
 
   # Parity fixture: an 8×8 edgeless identity-codec product with hit and miss coordinates for every
   # clause shape. The expected answers come from a brute-force oracle over the raw membership data
@@ -201,8 +203,8 @@ let
     6
   ];
   anti = map (i: at i (7 - i)) (lib.range 0 4);
-  sqCells = gp.restrict sq { cells = diag; };
-  sqRel = gp.restrict sq {
+  sqCells = gp.restrict { cells = diag; } sq;
+  sqRel = gp.restrict {
     relations = [
       {
         dims = [
@@ -212,7 +214,7 @@ let
         pairs = anti;
       }
     ];
-  };
+  } sq;
   narrowCells = [
     (at 2 2)
     (at 3 3)
@@ -223,8 +225,8 @@ let
     (at 5 5)
     (at 2 5)
   ];
-  sqConjCells = gp.restrict sqCells { cells = narrowCells; };
-  sqConjRelCells = gp.restrict sqRel { cells = narrowRel; };
+  sqConjCells = gp.restrict { cells = narrowCells; } sqCells;
+  sqConjRelCells = gp.restrict { cells = narrowRel; } sqRel;
   parity = [
     {
       r = sqCells;
@@ -245,7 +247,7 @@ let
   ];
   sortedIds = cs: lib.sort lib.lessThan (map sq.product.cellOf cs);
   answersOf = x: {
-    accepted = map (c: (builtins.tryEval (gp.cell x.r c)).success) sqCoords;
+    accepted = map (c: (builtins.tryEval (gp.cell c x.r)).success) sqCoords;
     members = sortedIds (gp.cells x.r);
   };
   oracleOf = x: {
@@ -263,7 +265,7 @@ let
   };
   malRel =
     pairs:
-    gp.restrict p {
+    gp.restrict {
       relations = [
         {
           dims = [
@@ -273,7 +275,7 @@ let
           inherit pairs;
         }
       ];
-    };
+    } p;
   caught = v: (builtins.tryEval (builtins.deepSeq v v)).success;
 in
 {
@@ -283,22 +285,22 @@ in
     test-malformed-membership-catchable = {
       expr = {
         malformedFirst = caught (
-          gp.cell (malRel [
+          gp.cell good (malRel [
             bad
             good
-          ]) good
+          ])
         );
         malformedAfterMatch = caught (
-          gp.cell (malRel [
+          gp.cell good (malRel [
             good
             bad
-          ]) good
+          ])
         );
         nonMember = caught (
-          gp.cell (malRel [
+          gp.cell (good // { user = users.U_vic; }) (malRel [
             good
             bad
-          ]) (good // { user = users.U_vic; })
+          ])
         );
         enumeration = caught (
           gp.cells (malRel [
@@ -307,25 +309,27 @@ in
           ])
         );
         cells = caught (
-          gp.cell (gp.restrict p {
-            cells = [
-              good
-              bad
-            ];
-          }) good
+          gp.cell good (
+            gp.restrict {
+              cells = [
+                good
+                bad
+              ];
+            } p
+          )
         );
         # the relation record itself: a missing `pairs`, an undeclared dim.
-        relationShape = caught (gp.cells (gp.restrict p { relations = [ { dims = [ "host" ]; } ]; }));
+        relationShape = caught (gp.cells (gp.restrict { relations = [ { dims = [ "host" ]; } ]; } p));
         undeclaredDim = caught (
           gp.cells (
-            gp.restrict p {
+            gp.restrict {
               relations = [
                 {
                   dims = [ "rack" ];
                   pairs = [ { rack = "r0"; } ];
                 }
               ];
-            }
+            } p
           )
         );
       };
@@ -343,7 +347,7 @@ in
     test-malformed-membership-lazy = {
       expr = [
         (builtins.isAttrs (malRel (throw "pairs forced")))
-        (builtins.isAttrs (gp.restrict p { cells = throw "cells forced"; }))
+        (builtins.isAttrs (gp.restrict { cells = throw "cells forced"; } p))
       ];
       expected = [
         true
@@ -366,10 +370,10 @@ in
     # among members (users/hosts here are edgeless factors), so its edge list is empty.
     test-induced-drops-nonmembers = {
       expr = byCells.edges (
-        gp.cell byCells {
+        gp.cell {
           host = hosts.H_axon01;
           user = users.U_sini;
-        }
+        } byCells
       );
       expected = [ ];
     };
@@ -404,10 +408,10 @@ in
       expr =
         (builtins.tryEval (
           builtins.deepSeq (tp.edges (
-            gp.cell tp {
+            gp.cell {
               t = "t0";
               y = "b0";
-            }
+            } tp
           )) true
         )).success;
       expected = true;

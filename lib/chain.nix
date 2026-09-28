@@ -144,10 +144,11 @@ let
     in
     go D;
 
+  # The product is the subject, so it comes last (P2, R7): `containmentChain coords lin pg`.
   containmentChain =
-    pg: coords: lin:
+    coords: lin: pg:
     let
-      _validated = view.cell pg coords; # reuse cell validation (unknown/missing/not-a-node/not-a-member)
+      _validated = view.cell coords pg; # reuse cell validation (unknown/missing/not-a-node/not-a-member)
       D = pg.product.dims; # free dims of pg, declared order
       subs = subsets D;
       projectCoords =

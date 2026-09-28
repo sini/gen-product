@@ -68,34 +68,34 @@ in
   flake.tests.projection-hom = {
     # tensor: both projections strict.
     test-tensor-x-strict = {
-      expr = lib.all (strictOk (gp.projectTo tens "x")) (prodEdges tens);
+      expr = lib.all (strictOk (gp.projectTo "x" tens)) (prodEdges tens);
       expected = true;
     };
     test-tensor-y-strict = {
-      expr = lib.all (strictOk (gp.projectTo tens "y")) (prodEdges tens);
+      expr = lib.all (strictOk (gp.projectTo "y" tens)) (prodEdges tens);
       expected = true;
     };
     # cartesian: weak (and NOT strict — a collapsing edge exists, so the strict claim is false).
     test-cartesian-x-weak = {
-      expr = lib.all (weakOk (gp.projectTo cart "x")) (prodEdges cart);
+      expr = lib.all (weakOk (gp.projectTo "x" cart)) (prodEdges cart);
       expected = true;
     };
     test-cartesian-x-not-strict = {
-      expr = lib.all (strictOk (gp.projectTo cart "x")) (prodEdges cart);
+      expr = lib.all (strictOk (gp.projectTo "x" cart)) (prodEdges cart);
       expected = false;
     };
     # strong: weak.
     test-strong-y-weak = {
-      expr = lib.all (weakOk (gp.projectTo strong "y")) (prodEdges strong);
+      expr = lib.all (weakOk (gp.projectTo "y" strong)) (prodEdges strong);
       expected = true;
     };
     # lex: leading (x) weak; trailing (y) NOT a homomorphism (some edge is neither edge nor collapse).
     test-lex-leading-weak = {
-      expr = lib.all (weakOk (gp.projectTo lex "x")) (prodEdges lex);
+      expr = lib.all (weakOk (gp.projectTo "x" lex)) (prodEdges lex);
       expected = true;
     };
     test-lex-trailing-not-hom = {
-      expr = lib.any (ed: !(weakOk (gp.projectTo lex "y") ed)) (prodEdges lex);
+      expr = lib.any (ed: !(weakOk (gp.projectTo "y" lex) ed)) (prodEdges lex);
       expected = true;
     };
   };

@@ -78,8 +78,8 @@ in
     };
     # unary product is isomorphic to the factor (edge set matches under the coord codec).
     test-unary-iso-to-factor = {
-      expr = lib.sort lib.lessThan (unary.edges (gp.cell unary { y = "b0"; }));
-      expected = [ (gp.cell unary { y = "b1"; }) ];
+      expr = lib.sort lib.lessThan (unary.edges (gp.cell { y = "b0"; } unary));
+      expected = [ (gp.cell { y = "b1"; } unary) ];
     };
     # K1 is a unit for cartesian: G □ K1 ≅ G. Same cell count, and each cell's single out-edge advances
     # only the G dimension (the unit dim stays fixed) — the coordinate-iso witness.
@@ -88,12 +88,12 @@ in
       expected = lib.length (gp.cells unary);
     };
     test-cartesian-k1-unit-edge = {
-      expr = map (t: gp.coordsOf cartUnit t) (
+      expr = map (t: gp.coordsOf t cartUnit) (
         cartUnit.edges (
-          gp.cell cartUnit {
+          gp.cell {
             y = "b0";
             unit = "*";
-          }
+          } cartUnit
         )
       );
       expected = [
@@ -111,12 +111,12 @@ in
       expected = lib.length (gp.cells unary);
     };
     test-strong-k1-unit-edge = {
-      expr = map (t: gp.coordsOf strongUnit t) (
+      expr = map (t: gp.coordsOf t strongUnit) (
         strongUnit.edges (
-          gp.cell strongUnit {
+          gp.cell {
             y = "b0";
             unit = "*";
-          }
+          } strongUnit
         )
       );
       expected = [
@@ -134,12 +134,12 @@ in
       expected = lib.length (gp.cells unary);
     };
     test-lex-k1-unit-edge = {
-      expr = map (t: gp.coordsOf lexUnit t) (
+      expr = map (t: gp.coordsOf t lexUnit) (
         lexUnit.edges (
-          gp.cell lexUnit {
+          gp.cell {
             y = "b0";
             unit = "*";
-          }
+          } lexUnit
         )
       );
       expected = [

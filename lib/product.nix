@@ -82,12 +82,26 @@ let
       f1
       f2
     ];
+  # Two factors of one sort (P2, R7 (b)): one record. The lexicographic product is not commutative,
+  # so the field names carry what the argument order did: `major` decides adjacency first, and
+  # `minor` only between cells equal in `major` (the Handbook's G ∘ H, G = `major`).
   lexicographic =
-    f1: f2:
-    productN "lexicographic" [
-      f1
-      f2
-    ];
+    prelude.door
+      {
+        name = "gen-product.lexicographic";
+        required = [
+          "major"
+          "minor"
+        ];
+        open = true;
+      }
+      (
+        f:
+        productN "lexicographic" [
+          f.major
+          f.minor
+        ]
+      );
 in
 {
   inherit

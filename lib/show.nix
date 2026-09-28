@@ -17,8 +17,9 @@ let
     in
     if t.success then (if isString t.value then t.value else toJSON t.value) else "<malformed-entry>";
 
+  # The product is the subject, so it comes last (P2, R7): `show.cell coords pg`.
   showCell =
-    pg: coords:
+    coords: pg:
     concatStringsSep ", " (
       map (d: "${d}=${renderEntry pg.product.def.factorsByDim.${d} coords.${d}}") (attrNames coords)
     );

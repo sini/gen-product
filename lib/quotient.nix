@@ -30,20 +30,27 @@ let
     listToAttrs
     ;
 
-  quotient =
-    graph:
-    {
-      classOf,
-      key ? (t: t.id_hash),
-      classData ? (
-        t: members: {
+  # `quotient { key ?; classData ?; keepSelfLoops ?; } classOf graph` (P2, R7): the options first, in
+  # one closed set checked at `quotient opts` (`prelude.door`); `classOf` is configuration and the
+  # graph is the subject, so it comes last.
+  quotient = prelude.door {
+    name = "gen-product.quotient";
+    optional = [
+      "key"
+      "classData"
+      "keepSelfLoops"
+    ];
+  } quotientCore;
+  quotientCore =
+    o: classOf: graph:
+    let
+      key = o.key or (t: t.id_hash);
+      classData =
+        o.classData or (t: members: {
           class = t;
           inherit members;
-        }
-      ),
-      keepSelfLoops ? true,
-    }:
-    let
+        });
+      keepSelfLoops = o.keepSelfLoops or true;
       inputNodes = graph.nodes;
       classKeyOf = id: key (classOf (graph.nodeData id));
 

@@ -34,6 +34,28 @@ let
 in
 {
   flake.tests.adjacency-lex = {
+    # P2 (R7 (b)): the binary sugar takes one record whose fields carry the factor order, and it is
+    # the declared-order product; a missing field is refused catchably, by name, at application.
+    test-p2-binary-sugar-is-major-then-minor = {
+      expr =
+        let
+          sugar = gp.lexicographic {
+            major = builtins.elemAt xy 0;
+            minor = builtins.elemAt xy 1;
+          };
+        in
+        implEdgeMap gp sugar (gp.cells sugar);
+      expected = implEdgeMap gp lexXY (gp.cells lexXY);
+    };
+    test-p2-binary-sugar-refuses-a-missing-factor = {
+      expr =
+        (builtins.tryEval (builtins.seq (gp.lexicographic { major = builtins.elemAt xy 0; }) null)).success;
+      expected = false;
+    };
+    test-p2-binary-sugar-publishes-its-fields = {
+      expr = gp.lexicographic.__functionArgs == builtins.functionArgs ({ major, minor, ... }: null);
+      expected = true;
+    };
     test-binary-matches-oracle = {
       expr = implEdgeMap gp lexXY (gp.cells lexXY);
       expected = oracleEdgeMap gp lexXY "lexicographic" xy (gp.cells lexXY);
@@ -51,16 +73,16 @@ in
           (
             yid:
             lib.elem
-              (gp.cell lexXY {
+              (gp.cell {
                 x = "a1";
                 y = yid;
-              })
+              } lexXY)
               (
                 lexXY.edges (
-                  gp.cell lexXY {
+                  gp.cell {
                     x = "a0";
                     y = "c0";
-                  }
+                  } lexXY
                 )
               )
           )
@@ -77,17 +99,17 @@ in
       expr =
         (lib.length (
           lexXY.edges (
-            gp.cell lexXY {
+            gp.cell {
               x = "a0";
               y = "c0";
-            }
+            } lexXY
           )
         )) == (lib.length (
           lexYX.edges (
-            gp.cell lexYX {
+            gp.cell {
               x = "a0";
               y = "c0";
-            }
+            } lexYX
           )
         ));
       expected = false;

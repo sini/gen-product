@@ -67,20 +67,20 @@ in
     # order — x's move first, then y's.
     test-cartesian-edge-order = {
       expr = cart.edges (
-        gp.cell cart {
+        gp.cell {
           x = "a0";
           y = "c0";
-        }
+        } cart
       );
       expected = [
-        (gp.cell cart {
+        (gp.cell {
           x = "a1";
           y = "c0";
-        })
-        (gp.cell cart {
+        } cart)
+        (gp.cell {
           x = "a0";
           y = "c1";
-        })
+        } cart)
       ];
     };
     # factor node order preserved (no silent sort).
@@ -102,10 +102,10 @@ in
           ];
         in
         t.edges (
-          gp.cell t {
+          gp.cell {
             x = "a0";
             y = "c0";
-          }
+          } t
         );
       expected =
         let

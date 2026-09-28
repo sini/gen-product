@@ -27,7 +27,7 @@ let
           t:
           builtins.toJSON {
             inherit u;
-            v = gp.coordsOf p t;
+            v = gp.coordsOf t p;
           }
         ) (p.edges (p.product.cellOf u))
       ) (gp.cells p)

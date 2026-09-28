@@ -22,7 +22,7 @@ let
     uf
   ];
   # … restricted to the REAL fleet: not every user exists on every host (policy-emitted membership).
-  fleet = gp.restrict full {
+  fleet = gp.restrict {
     relations = [
       {
         dims = [
@@ -45,14 +45,14 @@ let
         ];
       }
     ];
-  };
+  } full;
 
   # the sini@axon-01 CELL.
-  siniAxon = gp.cell fleet {
+  siniAxon = gp.cell {
     host = hosts.H_axon01;
     user = users.U_sini;
-  };
-  siniAxonCoords = gp.coordsOf fleet siniAxon;
+  } fleet;
+  siniAxonCoords = gp.coordsOf siniAxon fleet;
 
   # class-share: QUOTIENT the host graph by class.
   hostsGraph = {
@@ -61,7 +61,7 @@ let
     parent = _: null;
     nodeData = id: hosts.${id};
   };
-  classShare = gp.quotient hostsGraph { classOf = h: h.class; };
+  classShare = gp.quotient { } (h: h.class) hostsGraph;
 
   # matrix instantiation: the CELLS of the fleet.
   matrix = map (c: {
@@ -73,17 +73,16 @@ let
   # layer list. A fold-shaped consumer labels each layer by its fixed-dimension subset and takes the
   # MOST-SPECIFIC (last) as the winner — exactly how gen-settings would position a user@host override.
   chain =
-    gp.containmentChain fleet
+    gp.containmentChain
       {
         host = hosts.H_axon01;
         user = users.U_sini;
       }
-      (
-        gp.linearizeByDimOrder [
-          "host"
-          "user"
-        ]
-      );
+      (gp.linearizeByDimOrder [
+        "host"
+        "user"
+      ])
+      fleet;
   layerLabels = map (r: gp.show.subset (lib.sort lib.lessThan (builtins.attrNames r.fixed))) chain;
   winner = lib.last layerLabels;
 in

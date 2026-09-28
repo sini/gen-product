@@ -77,13 +77,13 @@ let
   # whose `entryOf = id: entries.${id}`) fed an unknown id_hash. The explicit-throw control and the
   # round-trip-mismatch scenario stay boolean and gate-safe, on `flake.tests`
   # (`ci/tests/identity-errors.nix`).
-  notNodeNaiveUncaught = gp.cell p {
+  notNodeNaiveUncaught = gp.cell {
     host = {
       id_hash = "ghost";
       name = "ghost";
     };
     user = users.U_sini;
-  };
+  } p;
 
   # malformed-membership — a relation pair lacking a dim of its relation, and a cell lacking a dim of
   # the product. Catchability (tryEval, both pair orders) is `ci/tests/restrict-membership.nix`.
@@ -94,26 +94,30 @@ let
   bad = {
     host = hosts.H_axon02;
   };
-  malformedPair = gp.cell (gp.restrict p {
-    relations = [
-      {
-        dims = [
-          "host"
-          "user"
-        ];
-        pairs = [
-          good
-          bad
-        ];
-      }
-    ];
-  }) good;
-  malformedCell = gp.cell (gp.restrict p {
-    cells = [
-      good
-      bad
-    ];
-  }) good;
+  malformedPair = gp.cell good (
+    gp.restrict {
+      relations = [
+        {
+          dims = [
+            "host"
+            "user"
+          ];
+          pairs = [
+            good
+            bad
+          ];
+        }
+      ];
+    } p
+  );
+  malformedCell = gp.cell good (
+    gp.restrict {
+      cells = [
+        good
+        bad
+      ];
+    } p
+  );
 in
 {
   config = {
@@ -131,49 +135,59 @@ in
     # `expectedError.msg` is a regex: parentheses are escaped.
     flake.testsError.factor-doors = {
       test-default-codec-non-node-refused-by-name = {
-        expr = gp.cell pDefault ghostHost;
+        expr = gp.cell ghostHost pDefault;
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: not-a-node in dim 'host' — ghost";
         };
       };
       test-default-codec-non-attrset-refused-by-name = {
-        expr = gp.cell pDefault (goodCoords // { host = "axon-01"; });
+        expr = gp.cell (goodCoords // { host = "axon-01"; }) pDefault;
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: not-a-node in dim 'host' — <malformed-entry>";
         };
       };
       test-key-not-a-function = {
-        expr = gp.cell (withHost { key = 5; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          key = 5;
+        });
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: malformed-factor — dim 'host': `key` is a int, not a function";
         };
       };
       test-entryof-not-a-function = {
-        expr = gp.cell (withHost { entryOf = 5; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          entryOf = 5;
+        });
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: malformed-factor — dim 'host': `entryOf` is a int, not a function";
         };
       };
       test-key-functor-not-a-function = {
-        expr = gp.cell (withHost { key.__functor = 1; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          key.__functor = 1;
+        });
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: malformed-factor — dim 'host': `key` is a set, not a function";
         };
       };
       test-key-returns-a-non-id = {
-        expr = gp.cell (withHost { key = _: x: x; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          key = _: x: x;
+        });
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: malformed-factor — dim 'host': `key` returned a lambda, not a node id \\(a scalar\\)";
         };
       };
       test-entryof-named-pattern-formal = {
-        expr = gp.cell (withHost { entryOf = { a }: a; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          entryOf = { a }: a;
+        });
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id \\(a scalar\\), which a pattern formal cannot accept";
@@ -184,24 +198,46 @@ in
       # `{ ... }` has no named formal (`functionArgs` is `{ }`, as for `x: …`), and a functor is not
       # a lambda, so the pattern-formal door cannot see either.
       test-residue-entryof-ellipsis-formal = {
-        expr = gp.cell (withHost { entryOf = { ... }: hosts.H_axon01; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          entryOf = { ... }: hosts.H_axon01;
+        });
         expectedError = {
           type = "TypeError";
           msg = "expected a set but found a string: \"H_axon01\"";
         };
       };
       test-residue-entryof-functor-pattern-formal = {
-        expr = gp.cell (withHost { entryOf.__functor = _: { a }: a; }) goodCoords;
+        expr = gp.cell goodCoords (withHost {
+          entryOf.__functor = _: { a }: a;
+        });
         expectedError = {
           type = "TypeError";
           msg = "expected a set but found a string: \"H_axon01\"";
         };
       };
       test-residue-key-body-aborts = {
-        expr = gp.cell (withHost { }) (goodCoords // { host = "axon-01"; });
+        expr = gp.cell (goodCoords // { host = "axon-01"; }) (withHost { });
         expectedError = {
           type = "TypeError";
           msg = "expected a set but found a string: \"axon-01\"";
+        };
+      };
+    };
+    # P2 (R7): an unknown option of `quotient` is refused by name at `quotient opts`, and a missing
+    # factor of the lexicographic sugar at its record's application.
+    flake.testsError.p2-doors = {
+      test-quotient-unknown-option-named = {
+        expr = gp.quotient { keepSelfLoop = false; };
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product.quotient: 'keepSelfLoop' is not an option of this door; the options are closed \\(accepted: 'key', 'classData', 'keepSelfLoops'\\) \\(in prelude.checkOptions\\)";
+        };
+      };
+      test-lexicographic-missing-factor-named = {
+        expr = gp.lexicographic { major = registryFactor "host" hosts; };
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product.lexicographic: required field 'minor' is missing";
         };
       };
     };
@@ -209,7 +245,7 @@ in
     # the same named door as `cell`, naming the first offending dim in declared order.
     flake.testsError.slice-doors = {
       test-fiber-non-node-refused-by-name = {
-        expr = (gp.fiber pDefault "host" ghostHost.host).nodes;
+        expr = (gp.fiber "host" ghostHost.host pDefault).nodes;
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: not-a-node in dim 'host' — ghost";
@@ -217,10 +253,10 @@ in
       };
       test-slice-non-node-refused-by-name = {
         expr =
-          (gp.slice pDefault {
+          (gp.slice {
             host = hosts.H_axon01;
             user = ghostHost.host;
-          }).nodes;
+          } pDefault).nodes;
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: not-a-node in dim 'user' — ghost";

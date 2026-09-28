@@ -243,9 +243,10 @@ let
       map (d: "${d}=${renderEntry def.factorsByDim.${d} coords.${d}}") (attrNames coords)
     );
 
-  # Validated addressing (public `cell`), read off the declared `product` field only.
+  # Validated addressing (public `cell`), read off the declared `product` field only. The product
+  # is the subject, so it comes last (P2, R7): `cell coords pg`.
   cell =
-    pg: coords:
+    coords: pg:
     let
       inherit (pg.product) def base restriction;
       freeDims = pg.product.dims;

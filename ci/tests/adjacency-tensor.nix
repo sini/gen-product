@@ -46,16 +46,16 @@ in
     # (b0,b0) advances both dims → (b1,b1) only.
     test-concrete-both-advance = {
       expr = bin.edges (
-        gp.cell bin {
+        gp.cell {
           x = "b0";
           y = "b0";
-        }
+        } bin
       );
       expected = [
-        (gp.cell bin {
+        (gp.cell {
           x = "b1";
           y = "b1";
-        })
+        } bin)
       ];
     };
   };
