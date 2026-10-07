@@ -20,6 +20,11 @@
   ...
 }:
 let
+  # gen-prelude's refusal text, composed with this library's own literal door, field and accepted
+  # set (den-hoag-7jltk): every assertion kept, none of gen-prelude's wording copied. Anchored at
+  # both ends, so a grown or reordered accepted set turns the cell red.
+  inherit (prelude) refusals;
+  exactly = msg: "^" + prelude.escapeRegex msg + "$";
   fx = import ./tests/_fixtures/graphs.nix { inherit lib graph; };
   inherit (fx)
     registryFactor
@@ -230,14 +235,16 @@ in
         expr = gp.quotient { keepSelfLoop = false; };
         expectedError = {
           type = "ThrownError";
-          msg = "gen-product.quotient: 'keepSelfLoop' is not an option of this door; the options are closed \\(accepted: 'key', 'classData', 'keepSelfLoops'\\) \\(in prelude.checkOptions\\)";
+          msg = exactly (
+            refusals.unknownOption "gen-product.quotient" [ "key" "classData" "keepSelfLoops" ] "keepSelfLoop"
+          );
         };
       };
       test-lexicographic-missing-factor-named = {
         expr = gp.lexicographic { major = registryFactor "host" hosts; };
         expectedError = {
           type = "ThrownError";
-          msg = "gen-product.lexicographic: required field 'minor' is missing";
+          msg = exactly (refusals.missingField "gen-product.lexicographic" [ "major" "minor" ] "minor");
         };
       };
     };
