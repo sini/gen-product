@@ -41,7 +41,7 @@ userFactor = { dim = "user"; graph = usersGraph; };
 fleet = genProduct.productN "cartesian" [ hostFactor userFactor ];
 
 # a CELL is a full coordinate — the id gen-graph queries take
-cellId = genProduct.cell { host = hosts.axon-01; user = users.sini; } fleet;
+cellId = genProduct.nodeAt { host = hosts.axon-01; user = users.sini; } fleet;
 fleet.edges cellId                        # product adjacency (an ordinary accessor)
 genProduct.coordsOf cellId fleet          # → { host = <entry>; user = <entry>; }
 ```
