@@ -96,14 +96,14 @@ in genProduct.cartesian hostFactor userFactor
 - **A product is an accessor-graph.** `productN`, `slice`, `fiber`, `restrict`, and `quotient` all
   return the accessor record `{ edges, parent, nodes, nodeData }` (plus a `product` metadata field,
   `{ kind, dims, factors, cellOf, coordsOf, base, restriction, def, enumeration }`, which every
-  gen-product operation reads, and `__cells`, the materialized member list `cells` returns — its
+  gen-product operation reads, and `__cells`, the materialized member list `nodeCoordinates` returns — its
   contract is in AGENTS.md `<pgraph>`);
   gen-graph's accessor-record queries apply unchanged (its labeled-graph doors do not: a product is
   not a labeled graph), and products nest as factors of other products.
 - **Lazy in, lazy out.** Adjacency, cell addressing, slices, projections, and containment chains never
   scan a factor's `nodes` list — not-a-node and not-a-member detection is *pointwise* (via a codec
-  round-trip), so `cell` and `containmentChain` succeed even under `nodes = throw …`. The `en-masse`
-  operations (`cells`, `nodes`) and the lexicographic trailing-dimension fan-out are the documented
+  round-trip), so `nodeAt` and `containmentChain` succeed even under `nodes = throw …`. The `en-masse`
+  operations (`nodeCoordinates`, `nodes`) and the lexicographic trailing-dimension fan-out are the documented
   exceptions.
 - **One enumeration per (def, restriction).** The member set depends on the product definition and its
   restriction, never on which coordinates a view has fixed, so a product and every slice of it share a
@@ -118,7 +118,7 @@ in genProduct.cartesian hostFactor userFactor
   are opaque internal keys (canonical `builtins.toJSON` of the ordered factor node ids). No public
   function takes or returns a `"kind:name"` string.
 - **Factor-spec contract.** A codec failure gen-product can decide is a named refusal: the default
-  `key` refuses a coordinate without `id_hash` (so `cell` says `not-a-node`); a `key` or `entryOf`
+  `key` refuses a coordinate without `id_hash` (so `nodeAt` says `not-a-node`); a `key` or `entryOf`
   that is not callable, an `entryOf` naming a pattern formal, and a `key` returning a set, list,
   function or null are `malformed-factor`, refused when the product is built or the cell addressed.
   What it cannot decide is the caller's: a supplied `entryOf` (or the graph's `nodeData` when
@@ -142,9 +142,9 @@ cartesian | tensor | strong = f1: f2: <pgraph>;
 lexicographic  = { major, minor }: <pgraph>;   # not commutative: the fields carry the order
 
 # addressing (coords are attrsets of registry entries)
-cell     = coords: pgraph: <cellId>;
+nodeAt   = coords: pgraph: <cellId>;
 coordsOf = cellId: pgraph: coords;
-cells    = pgraph: [ coords ];                  # lazy lattice enumeration, pinned row-major
+nodeCoordinates = pgraph: [ coords ];           # lazy lattice enumeration, pinned row-major
 
 # sub-structures
 slice     = partialCoords: pgraph: <pgraph>;    # induced sub-product over remaining dims

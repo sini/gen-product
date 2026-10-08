@@ -48,7 +48,7 @@ let
   } full;
 
   # the sini@axon-01 CELL.
-  siniAxon = gp.cell {
+  siniAxon = gp.nodeAt {
     host = hosts.H_axon01;
     user = users.U_sini;
   } fleet;
@@ -67,7 +67,7 @@ let
   matrix = map (c: {
     h = c.host.name;
     u = c.user.name;
-  }) (gp.cells fleet);
+  }) (gp.nodeCoordinates fleet);
 
   # settings specificity: the CONTAINMENT CHAIN for the sini@axon-01 cell, consumed as an ordinary
   # layer list. A fold-shaped consumer labels each layer by its fixed-dimension subset and takes the

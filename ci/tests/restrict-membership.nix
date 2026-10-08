@@ -26,7 +26,7 @@ let
     uf
   ];
 
-  cellIds = prod: map (c: prod.product.cellOf c) (gp.cells prod);
+  cellIds = prod: map (c: prod.product.cellOf c) (gp.nodeCoordinates prod);
   idSet = prod: lib.sort lib.lessThan (cellIds prod);
 
   # clause 1 — explicit cells.
@@ -119,7 +119,7 @@ let
       );
 
   nonMember = builtins.tryEval (
-    gp.cell {
+    gp.nodeAt {
       host = hosts.H_axon01;
       user = users.U_vic;
     } byCells
@@ -247,8 +247,8 @@ let
   ];
   sortedIds = cs: lib.sort lib.lessThan (map sq.product.cellOf cs);
   answersOf = x: {
-    accepted = map (c: (builtins.tryEval (gp.cell c x.r)).success) sqCoords;
-    members = sortedIds (gp.cells x.r);
+    accepted = map (c: (builtins.tryEval (gp.nodeAt c x.r)).success) sqCoords;
+    members = sortedIds (gp.nodeCoordinates x.r);
   };
   oracleOf = x: {
     accepted = map x.oracle sqCoords;
@@ -285,31 +285,31 @@ in
     test-malformed-membership-catchable = {
       expr = {
         malformedFirst = caught (
-          gp.cell good (malRel [
+          gp.nodeAt good (malRel [
             bad
             good
           ])
         );
         malformedAfterMatch = caught (
-          gp.cell good (malRel [
+          gp.nodeAt good (malRel [
             good
             bad
           ])
         );
         nonMember = caught (
-          gp.cell (good // { user = users.U_vic; }) (malRel [
+          gp.nodeAt (good // { user = users.U_vic; }) (malRel [
             good
             bad
           ])
         );
         enumeration = caught (
-          gp.cells (malRel [
+          gp.nodeCoordinates (malRel [
             good
             bad
           ])
         );
         cells = caught (
-          gp.cell good (
+          gp.nodeAt good (
             gp.restrict {
               cells = [
                 good
@@ -319,9 +319,11 @@ in
           )
         );
         # the relation record itself: a missing `pairs`, an undeclared dim.
-        relationShape = caught (gp.cells (gp.restrict { relations = [ { dims = [ "host" ]; } ]; } p));
+        relationShape = caught (
+          gp.nodeCoordinates (gp.restrict { relations = [ { dims = [ "host" ]; } ]; } p)
+        );
         undeclaredDim = caught (
-          gp.cells (
+          gp.nodeCoordinates (
             gp.restrict {
               relations = [
                 {
@@ -355,22 +357,22 @@ in
       ];
     };
     test-clause1-cells = {
-      expr = lib.length (gp.cells byCells);
+      expr = lib.length (gp.nodeCoordinates byCells);
       expected = 2;
     };
     test-clause2-relations = {
-      expr = lib.length (gp.cells byRel);
+      expr = lib.length (gp.nodeCoordinates byRel);
       expected = 2;
     };
     test-clause3-predicate = {
-      expr = lib.all (c: c.user.id_hash == "U_sini") (gp.cells byPred);
+      expr = lib.all (c: c.user.id_hash == "U_sini") (gp.nodeCoordinates byPred);
       expected = true;
     };
     # induced adjacency: an edge to a non-member is dropped. axon01/sini has no cartesian neighbour
     # among members (users/hosts here are edgeless factors), so its edge list is empty.
     test-induced-drops-nonmembers = {
       expr = byCells.edges (
-        gp.cell {
+        gp.nodeAt {
           host = hosts.H_axon01;
           user = users.U_sini;
         } byCells
@@ -384,7 +386,7 @@ in
     };
     # join enumeration is pinned (declared relation/pair order, row-major).
     test-join-pinned-order = {
-      expr = map (c: c.host.id_hash) (gp.cells joinR);
+      expr = map (c: c.host.id_hash) (gp.nodeCoordinates joinR);
       expected = [
         "H_axon01"
         "H_blade01"
@@ -395,7 +397,7 @@ in
       expr = map (c: {
         h = c.host.id_hash;
         u = c.user.id_hash;
-      }) (gp.cells conj);
+      }) (gp.nodeCoordinates conj);
       expected = [
         {
           h = "H_axon01";
@@ -408,7 +410,7 @@ in
       expr =
         (builtins.tryEval (
           builtins.deepSeq (tp.edges (
-            gp.cell {
+            gp.nodeAt {
               t = "t0";
               y = "b0";
             } tp
@@ -421,7 +423,7 @@ in
       expr = map (c: {
         h = c.host.id_hash;
         u = c.user.id_hash;
-      }) (gp.cells ordered);
+      }) (gp.nodeCoordinates ordered);
       expected = [
         {
           h = "H_blade01";

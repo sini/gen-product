@@ -27,11 +27,11 @@ let
     lib.all (
       c:
       let
-        cid = gp.cell c prod;
+        cid = gp.nodeAt c prod;
         back = gp.coordsOf cid prod;
       in
-      hashes back == hashes c && gp.cell back prod == cid
-    ) (gp.cells prod);
+      hashes back == hashes c && gp.nodeAt back prod == cid
+    ) (gp.nodeCoordinates prod);
 
   # restricted to two of the four host×user cells.
   restricted = gp.restrict {
@@ -48,9 +48,9 @@ let
   } p;
 
   sl = gp.slice { host = hosts.H_axon01; } p;
-  slCellSini = gp.cell { user = users.U_sini; } sl;
+  slCellSini = gp.nodeAt { user = users.U_sini; } sl;
 
-  namingFixedDim = builtins.tryEval (gp.cell { host = hosts.H_axon01; } sl);
+  namingFixedDim = builtins.tryEval (gp.nodeAt { host = hosts.H_axon01; } sl);
 in
 {
   flake.tests.cell-roundtrip = {
@@ -65,7 +65,7 @@ in
     # codec opacity: coordsOf recovers the same identities (id_hash) fed in.
     test-codec-opacity = {
       expr = hashes (
-        gp.coordsOf (gp.cell {
+        gp.coordsOf (gp.nodeAt {
           host = hosts.H_axon02;
           user = users.U_vic;
         } p) p
@@ -92,7 +92,7 @@ in
     # full-product reconstruction: base // free-coords addresses the underlying full cell, whose user
     # coordinate matches the slice's.
     test-slice-full-reconstruction = {
-      expr = hashes (gp.coordsOf (gp.cell (sl.product.base // gp.coordsOf slCellSini sl) p) p);
+      expr = hashes (gp.coordsOf (gp.nodeAt (sl.product.base // gp.coordsOf slCellSini sl) p) p);
       expected = {
         host = "H_axon01";
         user = "U_sini";

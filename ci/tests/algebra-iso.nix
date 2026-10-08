@@ -30,9 +30,9 @@ let
             v = gp.coordsOf t p;
           }
         ) (p.edges (p.product.cellOf u))
-      ) (gp.cells p)
+      ) (gp.nodeCoordinates p)
     );
-  coordSet = p: lib.sort lib.lessThan (map builtins.toJSON (gp.cells p));
+  coordSet = p: lib.sort lib.lessThan (map builtins.toJSON (gp.nodeCoordinates p));
 
   commutes =
     kind:

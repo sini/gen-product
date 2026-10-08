@@ -62,7 +62,7 @@ let
     tf
   ];
 
-  cid = gp.cell {
+  cid = gp.nodeAt {
     t = "t0";
     y = "b0";
   } cart;
@@ -92,7 +92,7 @@ in
       expr = succeeds (
         force (
           tens.edges (
-            gp.cell {
+            gp.nodeAt {
               t = "t0";
               y = "b0";
             } tens
@@ -105,7 +105,7 @@ in
       expr = succeeds (
         force (
           strong.edges (
-            gp.cell {
+            gp.nodeAt {
               t = "t0";
               y = "b0";
             } strong
@@ -161,7 +161,7 @@ in
       expr = succeeds (
         force (
           lex.edges (
-            gp.cell {
+            gp.nodeAt {
               ya = "a1";
               t = "t0";
             } lex
@@ -174,7 +174,7 @@ in
     # ── documented exceptions (positive-force assertions) ──
     # cells forces all factor node lists → throws.
     test-cells-forces-nodes = {
-      expr = succeeds (force (gp.cells cart));
+      expr = succeeds (force (gp.nodeCoordinates cart));
       expected = false;
     };
     # nodes forces the node lists → throws.
@@ -187,7 +187,7 @@ in
       expr = succeeds (
         force (
           lexLeadThrow.edges (
-            gp.cell {
+            gp.nodeAt {
               yb = "b0";
               t = "t0";
             } lexLeadThrow

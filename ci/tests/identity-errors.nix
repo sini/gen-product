@@ -50,14 +50,14 @@ let
   );
   # unknown-dim: coords reference an undeclared dim.
   unknownDim = fails (
-    gp.cell {
+    gp.nodeAt {
       host = hosts.H_axon01;
       user = users.U_sini;
       env = users.U_vic;
     } p
   );
   # missing-dim: partial coords to cell.
-  missingDim = fails (gp.cell { host = hosts.H_axon01; } p);
+  missingDim = fails (gp.nodeAt { host = hosts.H_axon01; } p);
 
   # not-a-node — (b) control: an entryOf that fails via an EXPLICIT `throw` (a caller-authored
   # guard, distinct from the fixture's naive idiom — see `../tests-error.nix`) IS caught by the
@@ -79,7 +79,7 @@ let
     uf
   ];
   notNodeExplicitThrowControl = fails (
-    gp.cell {
+    gp.nodeAt {
       host = {
         id_hash = "ghost";
         name = "ghost";
@@ -100,7 +100,7 @@ let
     uf
   ];
   notNodeMismatch = fails (
-    gp.cell {
+    gp.nodeAt {
       host = hosts.H_axon01;
       user = users.U_sini;
     } pMismatch
@@ -113,7 +113,7 @@ let
   ];
   vacuous =
     (builtins.tryEval (
-      gp.cell {
+      gp.nodeAt {
         x = "not-a-real-node";
         y = "b0";
       } idProd
@@ -129,14 +129,14 @@ let
     ];
   } p;
   notMember = fails (
-    gp.cell {
+    gp.nodeAt {
       host = hosts.H_blade01;
       user = users.U_vic;
     } restricted
   );
 
   # entries-in / entries-out audit: coordsOf returns registry ENTRIES (id_hash + name), not strings.
-  recovered = gp.coordsOf (gp.cell {
+  recovered = gp.coordsOf (gp.nodeAt {
     host = hosts.H_axon02;
     user = users.U_vic;
   } p) p;
@@ -202,10 +202,10 @@ in
     # entries-in: the public codec accepts entries (never a "kind:name" string) — round-trip witness.
     test-entries-in-accepted = {
       expr =
-        gp.cell (gp.coordsOf (gp.cell {
+        gp.nodeAt (gp.coordsOf (gp.nodeAt {
           host = hosts.H_axon01;
           user = users.U_sini;
-        } p) p) p == gp.cell {
+        } p) p) p == gp.nodeAt {
           host = hosts.H_axon01;
           user = users.U_sini;
         } p;

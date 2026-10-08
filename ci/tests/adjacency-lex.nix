@@ -44,8 +44,8 @@ in
             minor = builtins.elemAt xy 1;
           };
         in
-        implEdgeMap gp sugar (gp.cells sugar);
-      expected = implEdgeMap gp lexXY (gp.cells lexXY);
+        implEdgeMap gp sugar (gp.nodeCoordinates sugar);
+      expected = implEdgeMap gp lexXY (gp.nodeCoordinates lexXY);
     };
     test-p2-binary-sugar-refuses-a-missing-factor = {
       expr =
@@ -57,12 +57,12 @@ in
       expected = true;
     };
     test-binary-matches-oracle = {
-      expr = implEdgeMap gp lexXY (gp.cells lexXY);
-      expected = oracleEdgeMap gp lexXY "lexicographic" xy (gp.cells lexXY);
+      expr = implEdgeMap gp lexXY (gp.nodeCoordinates lexXY);
+      expected = oracleEdgeMap gp lexXY "lexicographic" xy (gp.nodeCoordinates lexXY);
     };
     test-ternary-matches-oracle = {
-      expr = implEdgeMap gp lexTri (gp.cells lexTri);
-      expected = oracleEdgeMap gp lexTri "lexicographic" tri (gp.cells lexTri);
+      expr = implEdgeMap gp lexTri (gp.nodeCoordinates lexTri);
+      expected = oracleEdgeMap gp lexTri "lexicographic" tri (gp.nodeCoordinates lexTri);
     };
     # Trailing-dim fan-out: from (a0, c0), the leading dim advances a0 -> a1, so the trailing dim y
     # ranges over ALL of gChain's nodes { c0, c1, c2 } — 3 targets from the leading move alone, plus
@@ -73,13 +73,13 @@ in
           (
             yid:
             lib.elem
-              (gp.cell {
+              (gp.nodeAt {
                 x = "a1";
                 y = yid;
               } lexXY)
               (
                 lexXY.edges (
-                  gp.cell {
+                  gp.nodeAt {
                     x = "a0";
                     y = "c0";
                   } lexXY
@@ -99,14 +99,14 @@ in
       expr =
         (lib.length (
           lexXY.edges (
-            gp.cell {
+            gp.nodeAt {
               x = "a0";
               y = "c0";
             } lexXY
           )
         )) == (lib.length (
           lexYX.edges (
-            gp.cell {
+            gp.nodeAt {
               x = "a0";
               y = "c0";
             } lexYX

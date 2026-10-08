@@ -32,27 +32,27 @@ in
 {
   flake.tests.adjacency-tensor = {
     test-binary-matches-oracle = {
-      expr = implEdgeMap gp bin (gp.cells bin);
-      expected = oracleEdgeMap gp bin "tensor" binFactors (gp.cells bin);
+      expr = implEdgeMap gp bin (gp.nodeCoordinates bin);
+      expected = oracleEdgeMap gp bin "tensor" binFactors (gp.nodeCoordinates bin);
     };
     test-ternary-matches-oracle = {
-      expr = implEdgeMap gp tri (gp.cells tri);
-      expected = oracleEdgeMap gp tri "tensor" triFactors (gp.cells tri);
+      expr = implEdgeMap gp tri (gp.nodeCoordinates tri);
+      expected = oracleEdgeMap gp tri "tensor" triFactors (gp.nodeCoordinates tri);
     };
     test-selfloop-matches-oracle = {
-      expr = implEdgeMap gp loop (gp.cells loop);
-      expected = oracleEdgeMap gp loop "tensor" loopFactors (gp.cells loop);
+      expr = implEdgeMap gp loop (gp.nodeCoordinates loop);
+      expected = oracleEdgeMap gp loop "tensor" loopFactors (gp.nodeCoordinates loop);
     };
     # (b0,b0) advances both dims → (b1,b1) only.
     test-concrete-both-advance = {
       expr = bin.edges (
-        gp.cell {
+        gp.nodeAt {
           x = "b0";
           y = "b0";
         } bin
       );
       expected = [
-        (gp.cell {
+        (gp.nodeAt {
           x = "b1";
           y = "b1";
         } bin)

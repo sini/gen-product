@@ -17,7 +17,7 @@ let
     (idFactor "x" fx.gA)
     (idFactor "y" fx.gChain)
   ];
-  cellCoords = c: map (co: { inherit (co) x y; }) (gp.cells c);
+  cellCoords = c: map (co: { inherit (co) x y; }) (gp.nodeCoordinates c);
 
   # a factor with a deliberately UNSORTED node order (n2, n0, n1) — enumeration must preserve it, not
   # sort it.
@@ -67,17 +67,17 @@ in
     # order — x's move first, then y's.
     test-cartesian-edge-order = {
       expr = cart.edges (
-        gp.cell {
+        gp.nodeAt {
           x = "a0";
           y = "c0";
         } cart
       );
       expected = [
-        (gp.cell {
+        (gp.nodeAt {
           x = "a1";
           y = "c0";
         } cart)
-        (gp.cell {
+        (gp.nodeAt {
           x = "a0";
           y = "c1";
         } cart)
@@ -85,7 +85,7 @@ in
     };
     # factor node order preserved (no silent sort).
     test-no-silent-reorder = {
-      expr = map (c: c.r) (gp.cells revProd);
+      expr = map (c: c.r) (gp.nodeCoordinates revProd);
       expected = [
         "n2"
         "n0"
@@ -102,7 +102,7 @@ in
           ];
         in
         t.edges (
-          gp.cell {
+          gp.nodeAt {
             x = "a0";
             y = "c0";
           } t

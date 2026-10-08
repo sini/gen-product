@@ -34,33 +34,33 @@ in
 {
   flake.tests.adjacency-cartesian = {
     test-binary-matches-oracle = {
-      expr = implEdgeMap gp bin (gp.cells bin);
-      expected = oracleEdgeMap gp bin "cartesian" binFactors (gp.cells bin);
+      expr = implEdgeMap gp bin (gp.nodeCoordinates bin);
+      expected = oracleEdgeMap gp bin "cartesian" binFactors (gp.nodeCoordinates bin);
     };
     test-ternary-matches-oracle = {
-      expr = implEdgeMap gp tri (gp.cells tri);
-      expected = oracleEdgeMap gp tri "cartesian" triFactors (gp.cells tri);
+      expr = implEdgeMap gp tri (gp.nodeCoordinates tri);
+      expected = oracleEdgeMap gp tri "cartesian" triFactors (gp.nodeCoordinates tri);
     };
     test-selfloop-matches-oracle = {
-      expr = implEdgeMap gp loop (gp.cells loop);
-      expected = oracleEdgeMap gp loop "cartesian" loopFactors (gp.cells loop);
+      expr = implEdgeMap gp loop (gp.nodeCoordinates loop);
+      expected = oracleEdgeMap gp loop "cartesian" loopFactors (gp.nodeCoordinates loop);
     };
     # A concrete edge: (a0,b0) moves x → (a1,b0) and y → (a0,b1), nothing else.
     test-concrete-neighbours = {
       expr = lib.sort lib.lessThan (
         bin.edges (
-          gp.cell {
+          gp.nodeAt {
             x = "a0";
             y = "b0";
           } bin
         )
       );
       expected = lib.sort lib.lessThan [
-        (gp.cell {
+        (gp.nodeAt {
           x = "a1";
           y = "b0";
         } bin)
-        (gp.cell {
+        (gp.nodeAt {
           x = "a0";
           y = "b1";
         } bin)

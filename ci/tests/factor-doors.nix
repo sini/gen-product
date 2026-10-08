@@ -92,7 +92,7 @@ in
     test-default-codec-not-a-node-is-catchable = {
       expr =
         !(builtins.tryEval (
-          builtins.deepSeq (gp.cell {
+          builtins.deepSeq (gp.nodeAt {
             host = ghost;
             user = users.U_sini;
           } pDefault) true
@@ -100,15 +100,15 @@ in
       expected = true;
     };
     test-default-codec-addresses-a-node = {
-      expr = gp.cell good pDefault;
+      expr = gp.nodeAt good pDefault;
       expected = "[\"H_axon01\",\"U_sini\"]";
     };
     test-default-codec-restricted-addresses-a-member = {
-      expr = gp.cell good (gp.restrict { cells = [ good ]; } pDefault);
+      expr = gp.nodeAt good (gp.restrict { cells = [ good ]; } pDefault);
       expected = "[\"H_axon01\",\"U_sini\"]";
     };
     test-int-node-id-addresses = {
-      expr = gp.cell {
+      expr = gp.nodeAt {
         host = builtins.elemAt ints 1;
         user = users.U_sini;
       } pInt;
@@ -161,7 +161,7 @@ in
       ];
     };
     test-int-bare-accessor-addresses = {
-      expr = gp.cell {
+      expr = gp.nodeAt {
         "0" = 1;
         "1" = "a";
       } pBareInt;

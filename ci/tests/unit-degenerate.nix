@@ -18,7 +18,7 @@ let
       map (c: {
         name = p.product.cellOf c;
         value = lib.sort lib.lessThan (p.edges (p.product.cellOf c));
-      }) (gp.cells p)
+      }) (gp.nodeCoordinates p)
     );
 
   k1 = kind: gp.productN kind [ ];
@@ -49,7 +49,7 @@ in
   flake.tests.unit-degenerate = {
     # 0-ary = K1: exactly one cell, no edges, for all kinds.
     test-k1-one-cell = {
-      expr = map (kind: lib.length (gp.cells (k1 kind))) [
+      expr = map (kind: lib.length (gp.nodeCoordinates (k1 kind))) [
         "cartesian"
         "tensor"
         "strong"
@@ -78,19 +78,19 @@ in
     };
     # unary product is isomorphic to the factor (edge set matches under the coord codec).
     test-unary-iso-to-factor = {
-      expr = lib.sort lib.lessThan (unary.edges (gp.cell { y = "b0"; } unary));
-      expected = [ (gp.cell { y = "b1"; } unary) ];
+      expr = lib.sort lib.lessThan (unary.edges (gp.nodeAt { y = "b0"; } unary));
+      expected = [ (gp.nodeAt { y = "b1"; } unary) ];
     };
     # K1 is a unit for cartesian: G □ K1 ≅ G. Same cell count, and each cell's single out-edge advances
     # only the G dimension (the unit dim stays fixed) — the coordinate-iso witness.
     test-cartesian-k1-unit-cells = {
-      expr = lib.length (gp.cells cartUnit);
-      expected = lib.length (gp.cells unary);
+      expr = lib.length (gp.nodeCoordinates cartUnit);
+      expected = lib.length (gp.nodeCoordinates unary);
     };
     test-cartesian-k1-unit-edge = {
       expr = map (t: gp.coordsOf t cartUnit) (
         cartUnit.edges (
-          gp.cell {
+          gp.nodeAt {
             y = "b0";
             unit = "*";
           } cartUnit
@@ -107,13 +107,13 @@ in
     # carries the G-edges even though the unit coordinate is loop-free; cell count matches and each
     # cell's single out-edge advances only the G dimension (the unit dim stays fixed).
     test-strong-k1-unit-cells = {
-      expr = lib.length (gp.cells strongUnit);
-      expected = lib.length (gp.cells unary);
+      expr = lib.length (gp.nodeCoordinates strongUnit);
+      expected = lib.length (gp.nodeCoordinates unary);
     };
     test-strong-k1-unit-edge = {
       expr = map (t: gp.coordsOf t strongUnit) (
         strongUnit.edges (
-          gp.cell {
+          gp.nodeAt {
             y = "b0";
             unit = "*";
           } strongUnit
@@ -130,13 +130,13 @@ in
     # node is the only "later unconstrained" completion, so each edge advances only the leading G
     # dimension — the coordinate-iso witness.
     test-lex-k1-unit-cells = {
-      expr = lib.length (gp.cells lexUnit);
-      expected = lib.length (gp.cells unary);
+      expr = lib.length (gp.nodeCoordinates lexUnit);
+      expected = lib.length (gp.nodeCoordinates unary);
     };
     test-lex-k1-unit-edge = {
       expr = map (t: gp.coordsOf t lexUnit) (
         lexUnit.edges (
-          gp.cell {
+          gp.nodeAt {
             y = "b0";
             unit = "*";
           } lexUnit
@@ -158,7 +158,7 @@ in
             k1Factor
           ];
         in
-        lib.all (c: t.edges (t.product.cellOf c) == [ ]) (gp.cells t);
+        lib.all (c: t.edges (t.product.cellOf c) == [ ]) (gp.nodeCoordinates t);
       expected = true;
     };
   };

@@ -26,7 +26,7 @@ let
         src = cid;
         dst = t;
       }) (p.edges cid)
-    ) (gp.cells p);
+    ) (gp.nodeCoordinates p);
 
   edgeIn =
     proj: a: b:

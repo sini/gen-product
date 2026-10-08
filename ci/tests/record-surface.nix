@@ -76,6 +76,8 @@ in
       "lexicographic"
       "linearizations"
       "linearizeByDimOrder"
+      "nodeAt"
+      "nodeCoordinates"
       "productN"
       "projectTo"
       "quotient"

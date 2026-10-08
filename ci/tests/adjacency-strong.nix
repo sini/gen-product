@@ -32,7 +32,7 @@ let
   ];
   loop = gp.productN "strong" loopFactors;
 
-  cells = gp.cells bin;
+  cells = gp.nodeCoordinates bin;
   # union of cartesian and tensor edge maps, per cell, sorted.
   unionMap = lib.listToAttrs (
     map (
@@ -54,12 +54,12 @@ in
       expected = oracleEdgeMap gp bin "strong" binFactors cells;
     };
     test-ternary-matches-oracle = {
-      expr = implEdgeMap gp tri (gp.cells tri);
-      expected = oracleEdgeMap gp tri "strong" triFactors (gp.cells tri);
+      expr = implEdgeMap gp tri (gp.nodeCoordinates tri);
+      expected = oracleEdgeMap gp tri "strong" triFactors (gp.nodeCoordinates tri);
     };
     test-selfloop-matches-oracle = {
-      expr = implEdgeMap gp loop (gp.cells loop);
-      expected = oracleEdgeMap gp loop "strong" loopFactors (gp.cells loop);
+      expr = implEdgeMap gp loop (gp.nodeCoordinates loop);
+      expected = oracleEdgeMap gp loop "strong" loopFactors (gp.nodeCoordinates loop);
     };
     # Corollary: strong edge set = cartesian ∪ tensor (binary).
     test-strong-is-cartesian-union-tensor = {

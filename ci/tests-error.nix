@@ -82,7 +82,7 @@ let
   # whose `entryOf = id: entries.${id}`) fed an unknown id_hash. The explicit-throw control and the
   # round-trip-mismatch scenario stay boolean and gate-safe, on `flake.tests`
   # (`ci/tests/identity-errors.nix`).
-  notNodeNaiveUncaught = gp.cell {
+  notNodeNaiveUncaught = gp.nodeAt {
     host = {
       id_hash = "ghost";
       name = "ghost";
@@ -99,7 +99,7 @@ let
   bad = {
     host = hosts.H_axon02;
   };
-  malformedPair = gp.cell good (
+  malformedPair = gp.nodeAt good (
     gp.restrict {
       relations = [
         {
@@ -115,7 +115,7 @@ let
       ];
     } p
   );
-  malformedCell = gp.cell good (
+  malformedCell = gp.nodeAt good (
     gp.restrict {
       cells = [
         good
@@ -140,21 +140,21 @@ in
     # `expectedError.msg` is a regex: parentheses are escaped.
     flake.testsError.factor-doors = {
       test-default-codec-non-node-refused-by-name = {
-        expr = gp.cell ghostHost pDefault;
+        expr = gp.nodeAt ghostHost pDefault;
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: not-a-node in dim 'host' — ghost";
         };
       };
       test-default-codec-non-attrset-refused-by-name = {
-        expr = gp.cell (goodCoords // { host = "axon-01"; }) pDefault;
+        expr = gp.nodeAt (goodCoords // { host = "axon-01"; }) pDefault;
         expectedError = {
           type = "ThrownError";
           msg = "gen-product: not-a-node in dim 'host' — <malformed-entry>";
         };
       };
       test-key-not-a-function = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           key = 5;
         });
         expectedError = {
@@ -163,7 +163,7 @@ in
         };
       };
       test-entryof-not-a-function = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           entryOf = 5;
         });
         expectedError = {
@@ -172,7 +172,7 @@ in
         };
       };
       test-key-functor-not-a-function = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           key.__functor = 1;
         });
         expectedError = {
@@ -181,7 +181,7 @@ in
         };
       };
       test-key-returns-a-non-id = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           key = _: x: x;
         });
         expectedError = {
@@ -190,7 +190,7 @@ in
         };
       };
       test-entryof-named-pattern-formal = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           entryOf = { a }: a;
         });
         expectedError = {
@@ -203,7 +203,7 @@ in
       # `{ ... }` has no named formal (`functionArgs` is `{ }`, as for `x: …`), and a functor is not
       # a lambda, so the pattern-formal door cannot see either.
       test-residue-entryof-ellipsis-formal = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           entryOf = { ... }: hosts.H_axon01;
         });
         expectedError = {
@@ -212,7 +212,7 @@ in
         };
       };
       test-residue-entryof-functor-pattern-formal = {
-        expr = gp.cell goodCoords (withHost {
+        expr = gp.nodeAt goodCoords (withHost {
           entryOf.__functor = _: { a }: a;
         });
         expectedError = {
@@ -221,7 +221,7 @@ in
         };
       };
       test-residue-key-body-aborts = {
-        expr = gp.cell (goodCoords // { host = "axon-01"; }) (withHost { });
+        expr = gp.nodeAt (goodCoords // { host = "axon-01"; }) (withHost { });
         expectedError = {
           type = "TypeError";
           msg = "expected a set but found a string: \"axon-01\"";

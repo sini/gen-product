@@ -43,12 +43,22 @@ let
     ;
 
   # ── addressing (public wrappers; take/return entries, cellIds are opaque internal keys) ──
-  # The product is each door's subject, so it comes last (P2, R7): `cell coords pg`,
+  # The product is each door's subject, so it comes last (P2, R7): `nodeAt coords pg`,
   # `coordsOf cellId pg`, `slice partialCoords pg`, `fiber dim entry pg`, `projectTo dim pg`,
   # `restrict membership pg`.
-  inherit (view) cell;
+  # A product's cell is its node (TERMINOLOGY.md: "the id gen-graph queries take"), so the
+  # addressing doors take the node's word (grammar R8, den-hoag-7gp66 O3). Bare `node`/`nodes` is
+  # not free: `pg.nodes` already holds the node-id list (G24).
+  nodeAt = view.cell;
   coordsOf = cellId: pg: pg.product.coordsOf cellId;
-  cells = pg: pg.__cells;
+  nodeCoordinates = pg: pg.__cells;
+
+  # ── THE RETIRED NAMES ──
+  # Tombstones rather than silent aliases, as gen-schema's `ref`: each is refused by name and the
+  # refusal names its replacement. Published values, not lambdas, so reaching a name refuses as well
+  # as applying it; no message interpolates anything.
+  cell = throw "gen-product: `cell` is renamed `nodeAt`. A product's cell is the node a graph query takes, so the door takes the node's word (grammar R8); the arguments and the behaviour are unchanged.";
+  cells = throw "gen-product: `cells` is renamed `nodeCoordinates`. A product's cell is the node a graph query takes, so the door takes the node's word (grammar R8); the argument and the behaviour are unchanged.";
 
   slice = partialCoords: pg: sliceView pg partialCoords;
   fiber =
@@ -98,8 +108,10 @@ product
 }
 // {
   inherit
+    nodeAt
     cell
     coordsOf
+    nodeCoordinates
     cells
     slice
     fiber

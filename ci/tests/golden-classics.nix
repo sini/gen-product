@@ -27,7 +27,7 @@ let
       map (coord: {
         name = p.product.cellOf coord;
         value = lib.sort lib.lessThan (p.edges (p.product.cellOf coord));
-      }) (gp.cells p)
+      }) (gp.nodeCoordinates p)
     );
   neigh = p: pairs: lib.sort lib.lessThan (map ({ x, y }: c p x y) pairs);
 

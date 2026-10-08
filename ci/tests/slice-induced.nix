@@ -19,7 +19,7 @@ let
       map (c: {
         name = p.product.cellOf c;
         value = lib.sort lib.lessThan (p.edges (p.product.cellOf c));
-      }) (gp.cells p)
+      }) (gp.nodeCoordinates p)
     );
 
   # ── cartesian, loop-free fixed coordinate ──
@@ -47,7 +47,7 @@ let
         name = cid;
         value = lib.sort lib.lessThan (lib.unique (freeCartL.edges cid ++ [ cid ]));
       }
-    ) (gp.cells freeCartL)
+    ) (gp.nodeCoordinates freeCartL)
   );
 
   # ── tensor, loop-free fixed coordinate → edgeless ──
@@ -91,7 +91,9 @@ in
     };
     # loop-free fixed coord: tensor slice is edgeless.
     test-tensor-slice-edgeless = {
-      expr = lib.all (c: tensSlice.edges (tensSlice.product.cellOf c) == [ ]) (gp.cells tensSlice);
+      expr = lib.all (c: tensSlice.edges (tensSlice.product.cellOf c) == [ ]) (
+        gp.nodeCoordinates tensSlice
+      );
       expected = true;
     };
     # every fixed coord looped: tensor slice is the free tensor product.

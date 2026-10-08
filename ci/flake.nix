@@ -36,6 +36,18 @@
       };
       # Cells whose `expr` CAN ABORT go on a second output, outside the `flake.tests` quantifier
       # `checks.default` forces unconditionally — see `./tests-error.nix`.
-      extraModules = [ ./tests-error.nix ];
+      extraModules = [
+        ./tests-error.nix
+        # `cell` and `cells` are TOMBSTONES (lib/default.nix, `── THE RETIRED NAMES ──`):
+        # `checks.root-surface` excludes them from the walk, and the generated
+        # `root-surface-retired.test-retired-*` cells pin each exact message at the root seam, so a
+        # resurrected or reworded tombstone reds.
+        {
+          gen.ci.rootSurface.retired = {
+            cell = "gen-product: `cell` is renamed `nodeAt`. A product's cell is the node a graph query takes, so the door takes the node's word (grammar R8); the arguments and the behaviour are unchanged.";
+            cells = "gen-product: `cells` is renamed `nodeCoordinates`. A product's cell is the node a graph query takes, so the door takes the node's word (grammar R8); the argument and the behaviour are unchanged.";
+          };
+        }
+      ];
     };
 }
