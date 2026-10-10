@@ -46,6 +46,8 @@
           gen.ci.rootSurface.retired = {
             cell = "gen-product: `cell` is renamed `nodeAt`. A product's cell is the node a graph query takes, so the door takes the node's word (grammar R8); the arguments and the behaviour are unchanged.";
             cells = "gen-product: `cells` is renamed `nodeCoordinates`. A product's cell is the node a graph query takes, so the door takes the node's word (grammar R8); the argument and the behaviour are unchanged.";
+            "show.cell" =
+              "gen-product: `show.cell` is renamed `show.node`. A product's cell is the node a graph query takes, so the display helper takes the node's word (grammar R8); the arguments and the behaviour are unchanged.";
           };
         }
       ];

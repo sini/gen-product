@@ -160,7 +160,7 @@ linearizations.byRank = ranks: <linearization>; # top-rank interleave
 latticeGraph = dims: { nodes; edges; };         # 2^D covering relation (Hasse), node.query-traversable
 
 # error-message helpers (not a rendering API)
-show.cell   = coords: pgraph: string;
+show.node   = coords: pgraph: string;
 show.subset = dims: string;
 ```
 

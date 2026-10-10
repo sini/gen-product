@@ -101,7 +101,7 @@ is likewise read, not exercised; the traps below cover only the `cells` and `pre
 
 | Export        | Signature                      |
 | ------------- | ------------------------------ |
-| `show.cell`   | `coords -> <pgraph> -> string` |
+| `show.node`   | `coords -> <pgraph> -> string` |
 | `show.subset` | `[dim] -> string`              |
 
 **Factor spec** (consumed, not exported) — `{ dim; graph; key ? (entry: entry.id_hash); entryOf ? graph.nodeData; }`.
@@ -173,7 +173,7 @@ coordinates are raw node id **strings** with no `id_hash` at all.
 | Enumerate the specificity ladder of a cell   | `containmentChain coords (linearizeByDimOrder dims) pg`        |
 | Interleave by rank instead of by count       | `containmentChain coords (linearizations.byRank ranks) pg`     |
 | Traverse the specificity lattice as a graph  | `latticeGraph dims` (labeled edge list, not an accessor-graph) |
-| Name a dimension/value inside your own throw | `show.cell` / `show.subset`                                    |
+| Name a dimension/value inside your own throw | `show.node` / `show.subset`                                    |
 
 ## Measured traps
 

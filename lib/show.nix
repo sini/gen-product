@@ -17,8 +17,8 @@ let
     in
     if t.success then (if isString t.value then t.value else toJSON t.value) else "<malformed-entry>";
 
-  # The product is the subject, so it comes last (P2, R7): `show.cell coords pg`.
-  showCell =
+  # The product is the subject, so it comes last (P2, R7): `show.node coords pg`.
+  showNode =
     coords: pg:
     concatStringsSep ", " (
       map (d: "${d}=${renderEntry pg.product.def.factorsByDim.${d} coords.${d}}") (attrNames coords)
@@ -29,7 +29,11 @@ in
 {
   inherit renderEntry;
   show = {
-    cell = showCell;
+    node = showNode;
+    # ── THE RETIRED NAME ──
+    # A tombstone rather than a silent alias, as `cell` in ./default.nix: refused by name, and the
+    # refusal names its replacement. No message interpolates anything.
+    cell = throw "gen-product: `show.cell` is renamed `show.node`. A product's cell is the node a graph query takes, so the display helper takes the node's word (grammar R8); the arguments and the behaviour are unchanged.";
     subset = showSubset;
   };
 }
