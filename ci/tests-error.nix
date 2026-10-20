@@ -198,26 +198,66 @@ in
           msg = "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id \\(a scalar\\), which a pattern formal cannot accept";
         };
       };
-      # ── RESIDUE (falsifiers): aborts inside a caller's function body, which gen-product cannot
-      # observe. Each pins the abort as it stands; a door that starts catching one reds its cell.
-      # `{ ... }` has no named formal (`functionArgs` is `{ }`, as for `x: …`), and a functor is not
-      # a lambda, so the pattern-formal door cannot see either.
-      test-residue-entryof-ellipsis-formal = {
+      # den-hoag-gtwxg U2d: the door reads the pattern through gen-prelude's `patternOf`, so
+      # `{ ... }:`, which `functionArgs` reports as `{ }`, and a functor whose `__functor`
+      # destructures are refused as a named formal is. They aborted inside the caller's body before.
+      test-entryof-ellipsis-pattern-formal = {
         expr = gp.nodeAt goodCoords (withHost {
           entryOf = { ... }: hosts.H_axon01;
         });
         expectedError = {
-          type = "TypeError";
-          msg = "expected a set but found a string: \"H_axon01\"";
+          type = "ThrownError";
+          msg = "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id \\(a scalar\\), which a pattern formal cannot accept";
         };
       };
-      test-residue-entryof-functor-pattern-formal = {
+      test-entryof-functor-pattern-formal = {
         expr = gp.nodeAt goodCoords (withHost {
           entryOf.__functor = _: { a }: a;
         });
         expectedError = {
-          type = "TypeError";
-          msg = "expected a set but found a string: \"H_axon01\"";
+          type = "ThrownError";
+          msg = "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id \\(a scalar\\), which a pattern formal cannot accept";
+        };
+      };
+      test-entryof-empty-set-pattern-formal = {
+        expr = gp.nodeAt goodCoords (withHost {
+          entryOf = { }: hosts.H_axon01;
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id \\(a scalar\\), which a pattern formal cannot accept";
+        };
+      };
+      # A functor `entryOf` whose `__functionArgs` is not an attrset of booleans is outside
+      # `prelude.patternOf`'s domain; the reader's named refusal propagates (it applied before).
+      test-entryof-functor-with-malformed-functionArgs-meets-the-prelude-refusal = {
+        expr = gp.nodeAt goodCoords (withHost {
+          entryOf = {
+            __functor = _: id: hosts.${id};
+            __functionArgs = {
+              a = 1;
+            };
+          };
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = "^gen-prelude\\.patternOf: the functor's `__functionArgs` is not an attrset of booleans$";
+        };
+      };
+      # A function whose head does not close inside the reader's bounded prefix is refused by the
+      # reader's name; a positional `entryOf` with a 1100-character name applied before.
+      test-entryof-with-a-head-outside-the-prelude-prefix-meets-the-prelude-refusal = {
+        expr = gp.nodeAt goodCoords (withHost {
+          entryOf = import (builtins.toFile "long-name.nix" (
+            let
+              n = builtins.concatStringsSep "" (builtins.genList (_: "x") 1100);
+            in
+            "hosts: ${n}: hosts.${"$"}{${n}}"
+          )) hosts;
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = "^gen-prelude\\.patternOf: the head of the function's XML rendering is not inside its first 1024 characters$";
         };
       };
       test-residue-key-body-aborts = {

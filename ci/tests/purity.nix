@@ -166,6 +166,21 @@ in
     expected = [ ];
   };
 
+  # gen's one `builtins.toXML` reading is gen-prelude's `patternOf` (den-hoag-a48xt arm (a)). This
+  # library reads `entryOf`'s pattern through it (`normalizeFactor`, lib/factor.nix) and calls
+  # `toXML` nowhere (den-hoag-gtwxg gate C4).
+  flake.tests.purity.test-the-library-calls-no-toxml = {
+    expr = builtins.length (lib.filter (src: genPrelude.hasInfix "toXML" src.code) sources);
+    expected = 0;
+  };
+
+  # ★ THE CONTROL: the same predicate over the unstripped text finds the comment above
+  # `normalizeFactor` that names `toXML`.
+  flake.tests.purity.test-positive-control-the-unstripped-library-names-toxml = {
+    expr = builtins.length (lib.filter (src: genPrelude.hasInfix "toXML" src.text) rawSources) > 0;
+    expected = true;
+  };
+
   # What the cell above is a statement ABOUT. Its `[ ]` is produced just as readily by a scan that
   # reads the wrong tree, or no tree, as by a library that is clean, and neither the detector cell
   # below nor a guard on the source list's SIZE can tell those apart — the first never touches

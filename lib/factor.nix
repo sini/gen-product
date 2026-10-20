@@ -40,10 +40,13 @@ let
   # is refused by name; one it cannot is the caller's contract (README, "Factor-spec contract").
   #  - The default `key` is gen-product's own, so its partiality is a `throw`, which `notANode`'s
   #    `tryEval` observes: `cell` then refuses `not-a-node`. Anywhere else it surfaces as itself.
-  #  - `key` / `entryOf` must be callable, and `entryOf` must not name a pattern formal: it takes a
-  #    node id, a scalar (gen-graph's `nodeKey` refuses sets), and a pattern formal accepts only a
-  #    set. A lambda with no named formal (`{ ... }:`) and a functor are indistinguishable from
-  #    `x: …` here, so they are residue, pinned by falsifiers in `ci/tests-error.nix`.
+  #  - `key` / `entryOf` must be callable, and `entryOf` must not have a set pattern: it takes a
+  #    node id, a scalar (gen-graph's `nodeKey` refuses sets), and a set pattern accepts only a set.
+  #    The pattern is read by gen-prelude's `patternOf` (den-hoag-gtwxg), so `{ ... }:`, `{ }:` and
+  #    a functor whose `__functor` destructures are refused as `{ a }:` is. A functor outside that
+  #    reader's domain (a `__functionArgs` that is not an attrset of booleans) meets
+  #    `gen-prelude.patternOf:`'s own named refusal here. The reader holds gen's one
+  #    `builtins.toXML` parse (den-hoag-a48xt arm (a)); this library calls `toXML` nowhere.
   # These two are thunks inside the normalized factor; `checkFactors` forces them at construction,
   # outside `notANode`'s `tryEval`, which would otherwise swallow the name.
   normalizeFactor =
@@ -73,7 +76,7 @@ let
           )
         );
         entryOf =
-          if builtins.isFunction entryOf && builtins.functionArgs entryOf != { } then
+          if prelude.isFunction entryOf && (prelude.patternOf entryOf).kind == "set" then
             throw "gen-product: malformed-factor — ${where}: `entryOf` takes a node id (a scalar), which a pattern formal cannot accept"
           else
             entryOf;
