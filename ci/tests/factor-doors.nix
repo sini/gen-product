@@ -160,6 +160,47 @@ in
         "[\"U_vic\"]"
       ];
     };
+    # `entryOf`'s guard reads only the pattern's `kind` (den-hoag-590wt): a functor whose
+    # `__functionArgs` is not an attrset of booleans is decided by the lambda it applies, and a
+    # positional `entryOf` with a 1100-character name is read. Both address the node.
+    test-entryof-functor-with-malformed-functionArgs-addresses-a-node = {
+      expr = gp.nodeAt good (
+        gp.productN "cartesian" [
+          (
+            registryFactor "host" hosts
+            // {
+              entryOf = {
+                __functor = _: id: hosts.${id};
+                __functionArgs = {
+                  a = 1;
+                };
+              };
+            }
+          )
+          (registryFactor "user" users)
+        ]
+      );
+      expected = "[\"H_axon01\",\"U_sini\"]";
+    };
+    test-entryof-with-a-long-name-addresses-a-node = {
+      expr = gp.nodeAt good (
+        gp.productN "cartesian" [
+          (
+            registryFactor "host" hosts
+            // {
+              entryOf = import (builtins.toFile "long-name.nix" (
+                let
+                  n = builtins.concatStringsSep "" (builtins.genList (_: "x") 1100);
+                in
+                "hosts: ${n}: hosts.${"$"}{${n}}"
+              )) hosts;
+            }
+          )
+          (registryFactor "user" users)
+        ]
+      );
+      expected = "[\"H_axon01\",\"U_sini\"]";
+    };
     test-int-bare-accessor-addresses = {
       expr = gp.nodeAt {
         "0" = 1;

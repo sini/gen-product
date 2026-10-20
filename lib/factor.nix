@@ -43,9 +43,10 @@ let
   #  - `key` / `entryOf` must be callable, and `entryOf` must not have a set pattern: it takes a
   #    node id, a scalar (gen-graph's `nodeKey` refuses sets), and a set pattern accepts only a set.
   #    The pattern is read by gen-prelude's `patternOf` (den-hoag-gtwxg), so `{ ... }:`, `{ }:` and
-  #    a functor whose `__functor` destructures are refused as `{ a }:` is. A functor outside that
-  #    reader's domain (a `__functionArgs` that is not an attrset of booleans) meets
-  #    `gen-prelude.patternOf:`'s own named refusal here. The reader holds gen's one
+  #    a functor whose `__functor` destructures are refused as `{ a }:` is. The guard reads only
+  #    `kind`, which the reader decides from the applied lambda, so a functor's `__functionArgs` is
+  #    not read here; a rendering the reader cannot parse meets `gen-prelude.patternOf:`'s own
+  #    named refusal. The reader holds gen's one
   #    `builtins.toXML` parse (den-hoag-a48xt arm (a)); this library calls `toXML` nowhere.
   # These two are thunks inside the normalized factor; `checkFactors` forces them at construction,
   # outside `notANode`'s `tryEval`, which would otherwise swallow the name.

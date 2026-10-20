@@ -228,38 +228,6 @@ in
           msg = "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id \\(a scalar\\), which a pattern formal cannot accept";
         };
       };
-      # A functor `entryOf` whose `__functionArgs` is not an attrset of booleans is outside
-      # `prelude.patternOf`'s domain; the reader's named refusal propagates (it applied before).
-      test-entryof-functor-with-malformed-functionArgs-meets-the-prelude-refusal = {
-        expr = gp.nodeAt goodCoords (withHost {
-          entryOf = {
-            __functor = _: id: hosts.${id};
-            __functionArgs = {
-              a = 1;
-            };
-          };
-        });
-        expectedError = {
-          type = "ThrownError";
-          msg = "^gen-prelude\\.patternOf: the functor's `__functionArgs` is not an attrset of booleans$";
-        };
-      };
-      # A function whose head does not close inside the reader's bounded prefix is refused by the
-      # reader's name; a positional `entryOf` with a 1100-character name applied before.
-      test-entryof-with-a-head-outside-the-prelude-prefix-meets-the-prelude-refusal = {
-        expr = gp.nodeAt goodCoords (withHost {
-          entryOf = import (builtins.toFile "long-name.nix" (
-            let
-              n = builtins.concatStringsSep "" (builtins.genList (_: "x") 1100);
-            in
-            "hosts: ${n}: hosts.${"$"}{${n}}"
-          )) hosts;
-        });
-        expectedError = {
-          type = "ThrownError";
-          msg = "^gen-prelude\\.patternOf: the head of the function's XML rendering is not inside its first 1024 characters$";
-        };
-      };
       test-residue-key-body-aborts = {
         expr = gp.nodeAt (goodCoords // { host = "axon-01"; }) (withHost { });
         expectedError = {
