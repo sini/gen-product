@@ -119,8 +119,10 @@ in genProduct.cartesian hostFactor userFactor
   function takes or returns a `"kind:name"` string.
 - **Factor-spec contract.** A codec failure gen-product can decide is a named refusal: the default
   `key` refuses a coordinate without `id_hash` (so `nodeAt` says `not-a-node`); a `key` or `entryOf`
-  that is not callable, an `entryOf` with a set pattern (read by gen-prelude's `patternOf`, so
-  `{ ... }:`, `{ }:` and a destructuring functor included), and a `key` returning a set, list,
+  that Nix cannot apply (gen-prelude's `isApplicable`, so `{ __functor = _: 5; }` included, and a
+  functor reaching no function within 32 `__functor` steps, named so), an `entryOf` with a set pattern
+  (read where the node id meets it, by gen-prelude's `applicablePatternOf`, so `{ ... }:`, `{ }:` and
+  a destructuring functor, nested or not, included), and a `key` returning a set, list,
   function or null are `malformed-factor`, refused when the product is built or the cell addressed.
   What it cannot decide is the caller's: a supplied `entryOf` (or the graph's `nodeData` when
   `entryOf` is defaulted) and a supplied `key` must **return or `throw`** on a non-node, never abort.

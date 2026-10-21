@@ -29,12 +29,9 @@ let
   # (it carries edges/parent/nodes/nodeData). The discriminator is total on both shapes.
   isFactorSpec = spec: spec ? graph;
 
-  # Callable is a function, or a set whose `__functor` is one: `f ? __functor` alone admits
-  # `{ __functor = 1; }`, which aborts when applied. Copied, not imported (gen-prelude is this
-  # library's only dependency), from gen-graph's `callable` (`lib/key.nix`).
-  callable =
-    f:
-    builtins.isFunction f || (builtins.isAttrs f && f ? __functor && builtins.isFunction f.__functor);
+  # Callable is what Nix can apply: gen-prelude `isApplicable`, the fuelled `__functor` walk
+  # (den-hoag-b6nyh), and a refusal names the value's kind as gen-prelude renders it.
+  callable = prelude.isApplicable;
 
   # THE FACTOR-SPEC DOORS (den-hoag-i25f; ADR-0025 item 1). A codec failure gen-product can decide
   # is refused by name; one it cannot is the caller's contract (README, "Factor-spec contract").
@@ -42,8 +39,10 @@ let
   #    `tryEval` observes: `cell` then refuses `not-a-node`. Anywhere else it surfaces as itself.
   #  - `key` / `entryOf` must be callable, and `entryOf` must not have a set pattern: it takes a
   #    node id, a scalar (gen-graph's `nodeKey` refuses sets), and a set pattern accepts only a set.
-  #    The pattern is read by gen-prelude's `patternOf` (den-hoag-gtwxg), so `{ ... }:`, `{ }:` and
-  #    a functor whose `__functor` destructures are refused as `{ a }:` is. The guard reads only
+  #    The pattern is read where the node id meets it, by gen-prelude's `applicablePatternOf`
+  #    (den-hoag-b6nyh), asked only after `callable` holds, since outside that domain the read
+  #    aborts; so `{ ... }:`, `{ }:` and a functor (nested or not) whose reached function
+  #    destructures are refused as `{ a }:` is. The guard reads only
   #    `kind`, which the reader decides from the applied lambda, so a functor's `__functionArgs` is
   #    not read here; a rendering the reader cannot parse meets `gen-prelude.patternOf:`'s own
   #    named refusal. The reader holds gen's one
@@ -60,7 +59,7 @@ let
           if callable f then
             f
           else
-            throw "gen-product: malformed-factor — ${where}: `${name}` is a ${builtins.typeOf f}, not a function";
+            throw "gen-product: malformed-factor — ${where}: `${name}` is ${prelude.applicableKindOf f}, not a function";
         entryOf = fn "entryOf" (spec.entryOf or spec.graph.nodeData);
       in
       {
@@ -77,7 +76,7 @@ let
           )
         );
         entryOf =
-          if prelude.isFunction entryOf && (prelude.patternOf entryOf).kind == "set" then
+          if (prelude.applicablePatternOf entryOf).kind == "set" then
             throw "gen-product: malformed-factor — ${where}: `entryOf` takes a node id (a scalar), which a pattern formal cannot accept"
           else
             entryOf;

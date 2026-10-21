@@ -33,6 +33,30 @@ let
     users
     ;
   gp = genProduct;
+  # den-hoag-b6nyh's values: not applicable, unbounded, and what Nix applies as `leaf` (nested, a
+  # functor-valued `__functor`, 32 steps, stacked `setFunctionArgs`).
+  chain = n: leaf: if n == 0 then leaf else { __functor = _: chain (n - 1) leaf; };
+  five = {
+    __functor = _: 5;
+  };
+  self =
+    let
+      s = {
+        __functor = self: self;
+      };
+    in
+    s;
+  bound = "a functor that reaches no function within 32 `__functor` steps";
+  applicable = leaf: [
+    { __functor = _: { __functor = _: leaf; }; }
+    {
+      __functor = {
+        __functor = _: _: leaf;
+      };
+    }
+    (chain 32 leaf)
+    (lib.setFunctionArgs (lib.setFunctionArgs leaf { }) { })
+  ];
 
   hf = registryFactor "host" hosts;
   uf = registryFactor "user" users;
@@ -139,6 +163,84 @@ in
     # refusal (a shape defect reported as `not-a-node`), so success alone does not discriminate.
     # `expectedError.msg` is a regex: parentheses are escaped.
     flake.testsError.factor-doors = {
+      # den-hoag-b6nyh: `key` and `entryOf` are admitted by what Nix can apply (gen-prelude
+      # `isApplicable`, the fuelled `__functor` walk), and `entryOf`'s pattern is read where the node
+      # id meets it (`applicablePatternOf`). Each refused value aborted on application before.
+      test-key-functor-returning-a-non-function-is-refused-by-name = {
+        expr = gp.nodeAt goodCoords (withHost {
+          key = five;
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = exactly "gen-product: malformed-factor — dim 'host': `key` is a set, not a function";
+        };
+      };
+      test-entryof-functor-returning-a-non-function-is-refused-by-name = {
+        expr = gp.nodeAt goodCoords (withHost {
+          entryOf = five;
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = exactly "gen-product: malformed-factor — dim 'host': `entryOf` is a set, not a function";
+        };
+      };
+      test-key-functor-returning-a-non-function-is-catchable = {
+        expr =
+          (builtins.tryEval (
+            builtins.deepSeq (gp.nodeAt goodCoords (withHost {
+              key = five;
+            })) true
+          )).success;
+        expected = false;
+      };
+      test-entryof-functor-returning-a-non-function-is-catchable = {
+        expr =
+          (builtins.tryEval (
+            builtins.deepSeq (gp.nodeAt goodCoords (withHost {
+              entryOf = five;
+            })) true
+          )).success;
+        expected = false;
+      };
+      test-self-returning-key-is-refused-naming-the-bound = {
+        expr = gp.nodeAt goodCoords (withHost {
+          key = self;
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = exactly "gen-product: malformed-factor — dim 'host': `key` is ${bound}, not a function";
+        };
+      };
+      test-33-level-entryof-is-refused-naming-the-bound = {
+        expr = gp.nodeAt goodCoords (withHost {
+          entryOf = chain 33 explicitHost.entryOf;
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = exactly "gen-product: malformed-factor — dim 'host': `entryOf` is ${bound}, not a function";
+        };
+      };
+      test-entryof-nested-functor-pattern-formal-is-refused-by-name = {
+        expr = gp.nodeAt goodCoords (withHost {
+          entryOf = {
+            __functor = _: { __functor = _: { a }: a; };
+          };
+        });
+        expectedError = {
+          type = "ThrownError";
+          msg = exactly "gen-product: malformed-factor — dim 'host': `entryOf` takes a node id (a scalar), which a pattern formal cannot accept";
+        };
+      };
+      test-applicable-key-and-entryof-are-served-as-their-lambda =
+        let
+          cell = over: (withHost over).nodeData (gp.nodeAt goodCoords (withHost over));
+        in
+        {
+          expr =
+            map (key: cell { inherit key; }) (applicable explicitHost.key)
+            ++ map (entryOf: cell { inherit entryOf; }) (applicable explicitHost.entryOf);
+          expected = builtins.genList (_: cell { }) 8;
+        };
       test-default-codec-non-node-refused-by-name = {
         expr = gp.nodeAt ghostHost pDefault;
         expectedError = {
